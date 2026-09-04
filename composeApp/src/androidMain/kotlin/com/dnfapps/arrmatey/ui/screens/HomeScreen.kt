@@ -423,13 +423,7 @@ private fun DrawerContent(
         modifier =
             Modifier
                 .fillMaxSize()
-                .pointerInput(Unit) {
-                    detectTapGestures(
-                        onLongPress = {
-                            showHiddenSection = true
-                        },
-                    )
-                }.padding(horizontal = 16.dp, vertical = 12.dp),
+                .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         NavigationDrawerItem(
@@ -491,7 +485,17 @@ private fun DrawerContent(
                 )
             }
 
-            Spacer(Modifier.weight(1f))
+            Spacer(
+                Modifier
+                    .weight(1f)
+                    .pointerInput(Unit) {
+                        detectTapGestures(
+                            onLongPress = {
+                                showHiddenSection = true
+                            },
+                        )
+                    },
+            )
 
             AnimatedVisibility(
                 visible = showHiddenSection && tabConfig.hiddenTabs.isNotEmpty(),
