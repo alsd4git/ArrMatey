@@ -195,7 +195,8 @@ fun HomeScreen(
                             beyondViewportPageCount = visibleTabs.size,
                             key = { page -> visibleTabs[page].key },
                         ) { page ->
-                            TabItemContent(visibleTabs[page], windowSizeClass, isExpanded)
+                            val wideRailIsVisible = isExpanded && overlayTab == null && visibleTabs.size > 1
+                            TabItemContent(visibleTabs[page], windowSizeClass, wideRailIsVisible)
                         }
                     }
                 }
@@ -239,7 +240,7 @@ fun HomeScreen(
         ) {
             if (isExpanded) {
                 Row(modifier = Modifier.fillMaxSize()) {
-                    if (overlayTab == null) {
+                    if (overlayTab == null && visibleTabs.size > 1) {
                         NavigationRail(
                             header = {
                                 Column(
@@ -321,13 +322,13 @@ fun HomeScreen(
             } else {
                 NavigationSuiteScaffold(
                     layoutType =
-                        if (overlayTab != null) {
+                        if (overlayTab != null || visibleTabs.size <= 1) {
                             NavigationSuiteType.None
                         } else {
                             NavigationSuiteScaffoldDefaults.calculateFromAdaptiveInfo(currentWindowAdaptiveInfo())
                         },
                     navigationSuiteItems = {
-                        if (overlayTab == null) {
+                        if (overlayTab == null && visibleTabs.size > 1) {
                             visibleTabs.forEach { entry ->
                                 item(
                                     selected = entry == selectedTab,
