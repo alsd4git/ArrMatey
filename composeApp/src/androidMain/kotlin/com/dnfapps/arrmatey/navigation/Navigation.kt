@@ -102,6 +102,8 @@ class DashboardTabNavigator : BaseNavigator<NavKey>(DashboardScreen.Main)
 
 class BazarrTabNavigator : BaseNavigator<BazarrScreen>(BazarrScreen.Library)
 
+class TracearrTabNavigator : BaseNavigator<NavKey>(TracearrScreen.Main)
+
 /**
  * Shared media navigation extensions.
  */
@@ -304,6 +306,7 @@ fun Navigator<SettingsScreen>.onInstanceTap(
     InstanceType.Seerr,
     InstanceType.Bazarr,
     InstanceType.Prowlarr,
+    InstanceType.Tracearr,
     -> toEditInstance(id)
 }
 

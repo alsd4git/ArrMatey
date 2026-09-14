@@ -1,0 +1,51 @@
+package com.dnfapps.arrmatey.ui.tabs
+
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.windowsizeclass.WindowSizeClass
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.runtime.Composable
+import androidx.navigation3.runtime.NavKey
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.ui.NavDisplay
+import com.dnfapps.arrmatey.navigation.NavigationManager
+import com.dnfapps.arrmatey.navigation.Navigator
+import com.dnfapps.arrmatey.ui.components.navigation.forwardSlideTransform
+import com.dnfapps.arrmatey.ui.components.navigation.mediaNavEntries
+import com.dnfapps.arrmatey.ui.components.navigation.popSlideTransform
+import com.dnfapps.arrmatey.ui.components.navigation.predictivePopSlideTransform
+import com.dnfapps.arrmatey.ui.components.navigation.tracearrNavEntries
+import org.koin.compose.koinInject
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
+@Composable
+fun TracearrTab(
+    windowSizeClass: WindowSizeClass,
+    wideRailIsVisible: Boolean,
+    navigationManager: NavigationManager = koinInject(),
+    navigation: Navigator<NavKey> = navigationManager.tracearr,
+) {
+    val isExpanded = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded
+    val isLargeScreen = windowSizeClass.widthSizeClass != WindowWidthSizeClass.Compact
+    NavDisplay(
+        backStack = navigation.backStack,
+        onBack = { navigation.popBackStack() },
+        transitionSpec = { forwardSlideTransform() },
+        popTransitionSpec = { popSlideTransform() },
+        predictivePopTransitionSpec = { _ -> predictivePopSlideTransform() },
+        entryProvider =
+            entryProvider {
+                tracearrNavEntries(
+                    navigation = navigation,
+                    isExpanded = isExpanded,
+                    isLargeScreen = isLargeScreen,
+                    wideRailIsVisible = wideRailIsVisible,
+                )
+                mediaNavEntries(
+                    navigation = navigation,
+                    isExpanded = isExpanded,
+                    wideRailIsVisible = wideRailIsVisible,
+                )
+            },
+    )
+}

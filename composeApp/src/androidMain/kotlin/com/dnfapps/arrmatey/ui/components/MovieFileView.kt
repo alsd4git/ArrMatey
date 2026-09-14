@@ -12,10 +12,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.dnfapps.arrmatey.arr.api.model.ArrMovie
 import com.dnfapps.arrmatey.arr.api.model.ExtraFile
 import com.dnfapps.arrmatey.shared.MR
@@ -47,18 +45,12 @@ fun MovieFileView(
                 text = mokoString(MR.strings.files),
                 style = MaterialTheme.typography.titleLarge,
             )
-//            Image(
-//                painter = painterResource(MR.images.radarr),
-//                contentDescription = null,
-//                modifier = Modifier.size(24.dp)
-//            )
             Spacer(modifier = Modifier.weight(1f))
             if (movie.movieFile != null || movieExtraFiles.isNotEmpty()) {
                 Text(
                     text = mokoString(MR.strings.history),
-                    fontSize = 18.sp,
+                    style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Medium,
                     modifier =
                         Modifier.clickable {
                             onNavigateToMovieFiles(movie)

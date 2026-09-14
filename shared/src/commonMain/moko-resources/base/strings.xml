@@ -55,6 +55,8 @@
     <string name="deep_links">Deep Links</string>
     <string name="services">Services</string>
     <string name="integrations">Integrations</string>
+    <string name="unified_media">Unified Media</string>
+    <string name="unified_media_description">Control how media details screens integrate with your services to combine Arr library data with Seerr details, Bazarr subtitles, and Tracearr playback analytics.</string>
     <string name="setup_seerr_for_in_app_details">Setup Seerr (Overseerr/Jellyseerr) to view person and media details directly in the app.</string>
     <string name="services_description">Services, Download Clients, and Custom Webpages</string>
     <string name="integrations_description">Control how your services work together</string>
@@ -69,6 +71,8 @@
     <string name="combine_seerr_arr_media_description">When enabled, the media details screen will combine information from Seerr and your Arr instances. If disabled, details will only display data based on the context.</string>
     <string name="bazarr_details_integration_title">Bazarr Subtitles Integration</string>
     <string name="bazarr_details_integration_description">Display subtitle information and management options from Bazarr in media and episode details.</string>
+    <string name="tracearr_details_integration_title">Tracearr Integration</string>
+    <string name="tracearr_details_integration_description">Display playback statistics, viewer history, and active streams from Tracearr in media details.</string>
     <string name="always_ask">Always Ask</string>
     <string name="appearance">Appearance</string>
     <string name="navigation">Navigation</string>
@@ -341,6 +345,8 @@
     <string name="instance_switcher_toggle_description">Automatically hide the switcher when only one instance is configured</string>
     <string name="open_in_browser">Open in Browser</string>
     <string name="replace_url_with_current">Replace saved URL with current</string>
+    <string name="now_playing">Now Playing</string>
+    <string name="no_active_streams">No active streams</string>
 
     <string name="search_results">Search Results</string>
     <string name="search_show_banners">Show banners</string>
@@ -443,6 +449,8 @@
         • A headless daemon for servers and routers
         • A web UI for remote controlling any of the above</string>
     <string name="bazarr_description">Bazarr is a companion application to Sonarr and Radarr. It manages and downloads subtitles based on your requirements. You define your preferences by TV show or movie and Bazarr takes care of everything for you.</string>
+    <string name="tracearr">Tracearr</string>
+    <string name="tracearr_description">Tracearr is a monitoring platform for Plex, Jellyfin, and Emby. Track streams in real-time, dig into playback analytics, and spot account sharing before it gets out of hand.</string>
 
     <!-- Movie Statuses -->
     <string name="tba">TBA</string>
@@ -675,6 +683,12 @@
     <!--- Download Status -->
     <string name="downloading">Downloading</string>
     <string name="paused">Paused</string>
+    <string name="playing">Playing</string>
+    <string name="active">Active</string>
+    <string name="transcoding">Transcoding</string>
+    <string name="terminate">Terminate</string>
+    <string name="server">Server</string>
+    <string name="user">User</string>
     <string name="queued">Queued</string>
     <string name="completed">Completed</string>
     <string name="failed">Failed</string>
@@ -791,6 +805,7 @@
     <string name="dashboard_todays_releases">Today's Releases</string>
     <string name="dashboard_upcoming_releases">Upcoming Releases</string>
     <string name="dashboard_instance_dashboards">Instance Dashboards</string>
+    <string name="dashboard_tracearr_overview">Tracearr Overview</string>
     <string name="dashboard_first_launch">Long press to edit and reorder</string>
 
     <!-- Release Notes -->
@@ -841,4 +856,87 @@
     <string name="update_library">Update Library</string>
     <string name="backup_database">Backup Database</string>
     <string name="command_queued">Command queued</string>
+
+    <!-- Tracearr Details -->
+    <string name="session_details">Session Details</string>
+    <string name="stream_details">Stream Details</string>
+    <string name="playback">Playback</string>
+    <string name="watch_time">Watch time</string>
+    <string name="media_length">Media length</string>
+    <string name="started">Started</string>
+    <string name="ip_address">IP Address</string>
+    <string name="platform">Platform</string>
+    <string name="product">Product</string>
+    <string name="device">Device</string>
+    <string name="player">Player</string>
+    <string name="device_id">Device ID</string>
+    <string name="container">Container</string>
+    <string name="bitrate">Bitrate</string>
+    <string name="codec">Codec</string>
+    <string name="resolution">Resolution</string>
+    <string name="framerate">Framerate</string>
+    <string name="channels">Channels</string>
+    <string name="sample_rate">Sample Rate</string>
+    <string name="source_header">SOURCE</string>
+    <string name="stream_header">STREAM</string>
+    <string name="direct_play">Direct Play</string>
+    <string name="direct_stream">Direct Stream</string>
+    <string name="transcode">Transcode</string>
+    <string name="watched">Watched</string>
+    <string name="sampled">Sampled</string>
+    <string name="abandoned">Abandoned</string>
+    <string name="view_profile">View profile</string>
+    <string name="hdr">HDR</string>
+    <string name="profile">Profile</string>
+    <string name="color">Color</string>
+    <string name="alerts">Alerts</string>
+    <string name="plays">Plays</string>
+    <string name="active_users">Active Users</string>
+    <string name="users">Users</string>
+    <string name="acknowledged">Acknowledged</string>
+    <string name="no_violations_found">No violations found</string>
+    <string name="violations">Violations</string>
+    <string name="sessions">Sessions</string>
+    <string name="movie_singular">Movie</string>
+    <string name="track">Track</string>
+    <string name="media">Media</string>
+    <string name="subtitle_format">Format</string>
+    <string name="just_now">just now</string>
+    <string name="minute_ago">1 minute ago</string>
+    <string name="minutes_ago">%1$d minutes ago</string>
+    <string name="hour_ago">1 hour ago</string>
+    <string name="hours_ago">%1$d hours ago</string>
+    <string name="user_info">User Info</string>
+    <string name="user_details">User Details</string>
+    <string name="statistics">Statistics</string>
+    <string name="recent_sessions">Recent Sessions</string>
+    <string name="trust_score">Trust Score</string>
+    <string name="accounts">Accounts</string>
+    <string name="joined">Joined</string>
+    <string name="last_activity">Last Activity</string>
+    <string name="top_genres">Top Genres</string>
+    <string name="last_30_days">Last 30 Days</string>
+    <string name="last_7_days">Last 7 Days</string>
+    <string name="plays_over_time">Plays Over Time</string>
+    <string name="concurrent_streams">Concurrent Streams</string>
+    <string name="activity_by_day_of_week">Activity by Day of Week</string>
+    <string name="activity_by_hour_of_day">Activity by Hour of Day</string>
+    <string name="platforms">Platforms</string>
+    <string name="stream_quality">Stream Quality</string>
+    <string name="week">Week</string>
+    <string name="month">Month</string>
+    <string name="all_time">All Time</string>
+    <string name="thirty_days">30 Days</string>
+    <string name="seven_days">7 Days</string>
+    <string name="total_plays">Total Plays</string>
+    <string name="viewers">Viewers</string>
+    <string name="server">Server</string>
+    <string name="servers">Servers</string>
+    <string name="per_server_breakdown">Per-Server Breakdown</string>
+    <string name="top_watchers">Top Watchers</string>
+    <string name="last_watched">Last watched: %1$s</string>
+    <string name="no_stream_history">No stream history recorded yet.</string>
+    <string name="load_more_history">Load More History</string>
+    <string name="analytics">Analytics</string>
+    <string name="media_files">Media Files</string>
 </resources>

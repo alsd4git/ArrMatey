@@ -140,6 +140,8 @@ dependencies {
 
     implementation(libs.aboutlibraries)
 
+    implementation(libs.vico.compose.m3)
+
     debugImplementation(compose.uiTooling)
 
     testImplementation(libs.kotlin.testJunit)

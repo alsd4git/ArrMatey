@@ -126,6 +126,7 @@ import com.dnfapps.arrmatey.instances.usecase.GetBazarrInstanceRepositoryUseCase
 import com.dnfapps.arrmatey.instances.usecase.GetInstanceByIdUseCase
 import com.dnfapps.arrmatey.instances.usecase.GetProwlarrInstanceRepositoryUseCase
 import com.dnfapps.arrmatey.instances.usecase.GetSeerrInstanceRepositoryUseCase
+import com.dnfapps.arrmatey.instances.usecase.GetTracearrInstanceRepositoryUseCase
 import com.dnfapps.arrmatey.instances.usecase.ObserveAllInstancesByTypeUseCase
 import com.dnfapps.arrmatey.instances.usecase.ObserveAllInstancesUseCase
 import com.dnfapps.arrmatey.instances.usecase.ObserveDownloadClientPreferencesUseCase
@@ -171,6 +172,21 @@ import com.dnfapps.arrmatey.seerr.usecase.SubmitRequestUseCase
 import com.dnfapps.arrmatey.seerr.viewmodel.IssueDetailsViewModel
 import com.dnfapps.arrmatey.seerr.viewmodel.RequestsViewModel
 import com.dnfapps.arrmatey.seerr.viewmodel.SeerrMediaDetailsViewModel
+import com.dnfapps.arrmatey.tracearr.usecase.GetTracearrActivityUseCase
+import com.dnfapps.arrmatey.tracearr.usecase.GetTracearrHistoryUseCase
+import com.dnfapps.arrmatey.tracearr.usecase.GetTracearrStatsTodayUseCase
+import com.dnfapps.arrmatey.tracearr.usecase.GetTracearrStreamsUseCase
+import com.dnfapps.arrmatey.tracearr.usecase.GetTracearrUsersUseCase
+import com.dnfapps.arrmatey.tracearr.usecase.GetTracearrViolationsUseCase
+import com.dnfapps.arrmatey.tracearr.usecase.GetUserDetailUseCase
+import com.dnfapps.arrmatey.tracearr.usecase.GetUserHistoryUseCase
+import com.dnfapps.arrmatey.tracearr.usecase.GetUserStatsUseCase
+import com.dnfapps.arrmatey.tracearr.viewmodel.TracearrActivityViewModel
+import com.dnfapps.arrmatey.tracearr.viewmodel.TracearrHistoryViewModel
+import com.dnfapps.arrmatey.tracearr.viewmodel.TracearrUserViewModel
+import com.dnfapps.arrmatey.tracearr.viewmodel.TracearrUsersViewModel
+import com.dnfapps.arrmatey.tracearr.viewmodel.TracearrViewModel
+import com.dnfapps.arrmatey.tracearr.viewmodel.TracearrViolationsViewModel
 import com.dnfapps.arrmatey.utils.MokoStrings
 import com.dnfapps.arrmatey.utils.NetworkConnectivityObserverFactory
 import com.dnfapps.arrmatey.utils.NetworkConnectivityRepository
@@ -321,6 +337,16 @@ val useCaseModule =
         factory { SmartAddMediaUseCase(get()) }
         factory { GetUnifiedMediaDetailsUseCase(get(), get(), get(), get(), get(), get(), get()) }
         factory { GetBazarrInstanceRepositoryUseCase(get()) }
+        factory { GetTracearrInstanceRepositoryUseCase(get()) }
+        factory { GetTracearrStreamsUseCase() }
+        factory { GetTracearrStatsTodayUseCase() }
+        factory { GetTracearrHistoryUseCase() }
+        factory { GetTracearrUsersUseCase() }
+        factory { GetTracearrViolationsUseCase() }
+        factory { GetTracearrActivityUseCase() }
+        factory { GetUserDetailUseCase() }
+        factory { GetUserStatsUseCase() }
+        factory { GetUserHistoryUseCase() }
         factory { GetCurrentSeerrUserUseCase() }
         factory { GetRequestsUseCase() }
         factory { GetTrendingUseCase() }
@@ -426,6 +452,7 @@ val viewModelModule =
                 getArrInstanceRepositoryUseCase = get(),
                 getSeerrInstanceRepositoryUseCase = get(),
                 getBazarrInstanceRepositoryUseCase = get(),
+                getTracearrInstanceRepositoryUseCase = get(),
                 toggleMonitorUseCase = get(),
                 updateMediaUseCase = get(),
                 deleteMediaUseCase = get(),
@@ -520,6 +547,14 @@ val viewModelModule =
             BazarrDetailsViewModel(id, type, get(), get(), get(), get(), get())
         }
         viewModelOf(::CombinedDashboardViewModel)
+        viewModelOf(::TracearrViewModel)
+        viewModelOf(::TracearrHistoryViewModel)
+        viewModelOf(::TracearrUsersViewModel)
+        viewModelOf(::TracearrViolationsViewModel)
+        viewModelOf(::TracearrActivityViewModel)
+        viewModel { (userRef: String) ->
+            TracearrUserViewModel(userRef, get(), get(), get(), get())
+        }
         viewModelOf(::BackupViewModel)
         viewModelOf(::UnifiedLibraryViewModel)
     }

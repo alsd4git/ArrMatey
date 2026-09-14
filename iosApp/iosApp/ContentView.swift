@@ -122,6 +122,9 @@ struct AppLauncherGrid: View {
             .navigationDestination(for: BazarrRoute.self) { route in
                 BazarrRouteDestination(route: route)
             }
+            .navigationDestination(for: TracearrRoute.self) { route in
+                TracearrRouteDestination(route: route)
+            }
         }
     }
 
@@ -191,6 +194,7 @@ struct LauncherTabView: View {
                 case .prowlarr: ProwlarrTab().environment(\.navigationContext, .launcher)
                 case .bazarr: BazarrTab().environment(\.navigationContext, .launcher)
                 case .dashboard: DashboardTab().environment(\.navigationContext, .launcher)
+                case .tracearr: TracearrTab().environment(\.navigationContext, .launcher)
                 }
             } else if let custom = tabItem as? TabItemCustomWebpage {
                 CustomWebpageViewerScreen(webpageId: custom.id)

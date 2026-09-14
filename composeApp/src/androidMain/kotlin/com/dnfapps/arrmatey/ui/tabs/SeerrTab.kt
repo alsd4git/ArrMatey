@@ -13,21 +13,18 @@ import com.dnfapps.arrmatey.navigation.NavigationManager
 import com.dnfapps.arrmatey.navigation.Navigator
 import com.dnfapps.arrmatey.navigation.SeerrScreen
 import com.dnfapps.arrmatey.navigation.toDetails
-import com.dnfapps.arrmatey.seerr.viewmodel.RequestsViewModel
 import com.dnfapps.arrmatey.ui.components.navigation.forwardSlideTransform
 import com.dnfapps.arrmatey.ui.components.navigation.mediaNavEntries
 import com.dnfapps.arrmatey.ui.components.navigation.popSlideTransform
 import com.dnfapps.arrmatey.ui.components.navigation.predictivePopSlideTransform
 import com.dnfapps.arrmatey.ui.screens.RequestsScreen
 import org.koin.compose.koinInject
-import org.koin.compose.viewmodel.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun SeerrTab(
     windowSizeClass: WindowSizeClass,
     wideRailIsVisible: Boolean,
-    viewModel: RequestsViewModel = koinViewModel(),
     navigationManager: NavigationManager = koinInject(),
     navigation: Navigator<NavKey> = navigationManager.requests,
 ) {
@@ -42,7 +39,6 @@ fun SeerrTab(
             entryProvider {
                 entry<SeerrScreen.Home> {
                     RequestsScreen(
-                        viewModel = viewModel,
                         isExpanded = isExpanded,
                         wideRailIsVisible = wideRailIsVisible,
                         onNavigateToDetails = { tmdbId, type ->

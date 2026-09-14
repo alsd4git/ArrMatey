@@ -22,6 +22,7 @@ class NavigationManager: NSObject, ObservableObject, UNUserNotificationCenterDel
     @Published var launcherPath = NavigationPath()
     @Published var dashboardPath = NavigationPath()
     @Published var bazarrPath = NavigationPath()
+    @Published var tracearrPath = NavigationPath()
     @Published var libraryPath = NavigationPath()
     @Published var calendarPath = NavigationPath()
 
@@ -54,6 +55,7 @@ class NavigationManager: NSObject, ObservableObject, UNUserNotificationCenterDel
         case .seerr: break
         case .prowlarr: break
         case .bazarr: break
+        case .tracearr: break
         }
     }
 
@@ -91,6 +93,7 @@ class NavigationManager: NSObject, ObservableObject, UNUserNotificationCenterDel
         case .seerr: break
         case .prowlarr: break // Prowlarr doesn't use media routes
         case .bazarr: break // Bazarr doesn't use media routes
+        case .tracearr: break
         }
     }
 
@@ -107,6 +110,16 @@ class NavigationManager: NSObject, ObservableObject, UNUserNotificationCenterDel
             launcherPath.append(route)
         } else {
             bazarrPath.append(route)
+        }
+    }
+
+    func go(to route: TracearrRoute) {
+        if showLauncher {
+            launcherPath.append(route)
+        } else if selectedTab.key == TabItemStandard.dashboard.key {
+            dashboardPath.append(route)
+        } else {
+            tracearrPath.append(route)
         }
     }
 
@@ -155,6 +168,7 @@ class NavigationManager: NSObject, ObservableObject, UNUserNotificationCenterDel
         seerrPath = NavigationPath()
         launcherPath = NavigationPath()
         bazarrPath = NavigationPath()
+        tracearrPath = NavigationPath()
         libraryPath = NavigationPath()
     }
 
@@ -186,6 +200,7 @@ class NavigationManager: NSObject, ObservableObject, UNUserNotificationCenterDel
         self.libraryPath = NavigationPath()
 
         self.seerrPath = NavigationPath()
+        self.tracearrPath = NavigationPath()
     }
 
     func goInLauncher(to route: SettingsRoute) {
@@ -248,6 +263,8 @@ class NavigationManager: NSObject, ObservableObject, UNUserNotificationCenterDel
             launcherPath.append(route)
         } else if let type = instanceType {
             go(to: route, of: type)
+        } else if selectedTab.key == TabItemStandard.tracearr.key {
+            tracearrPath.append(route)
         } else {
             seerrPath.append(route)
         }
@@ -377,6 +394,10 @@ class NavigationManager: NSObject, ObservableObject, UNUserNotificationCenterDel
         navigateToTab(TabItemStandard.bazarr as TabItem)
     }
 
+    func openTracearrTab() {
+        navigateToTab(TabItemStandard.tracearr as TabItem)
+    }
+
     func openDownloadsTab() {
         navigateToTab(TabItemStandard.downloads as TabItem)
     }
@@ -457,6 +478,7 @@ class NavigationManager: NSObject, ObservableObject, UNUserNotificationCenterDel
         case .seerr: return TabItemStandard.requests as TabItem
         case .prowlarr: return TabItemStandard.prowlarr as TabItem
         case .bazarr: return TabItemStandard.bazarr as TabItem
+        case .tracearr: return TabItemStandard.tracearr as TabItem
         }
     }
 }
@@ -515,6 +537,14 @@ enum SettingsRoute : Hashable {
 enum BazarrRoute: Hashable {
     case library
     case details(Int64, BazarrMediaType)
+}
+
+enum TracearrRoute: Hashable {
+    case history
+    case user(String)
+    case users
+    case violations
+    case activity
 }
 
 extension MediaRoute {
