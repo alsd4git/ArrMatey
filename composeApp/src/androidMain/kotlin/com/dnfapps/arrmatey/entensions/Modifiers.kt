@@ -4,8 +4,10 @@ import android.graphics.BlurMaskFilter
 import android.graphics.Paint
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
@@ -72,17 +74,17 @@ fun Modifier.breakPadding(horizontal: Dp): Modifier =
 
 fun Modifier.colouredDropShadow(shadowColor: Color?): Modifier =
     this.then(
-        if (shadowColor == null) {
+        if (shadowColor == null || shadowColor == Color.Unspecified) {
             Modifier
         } else {
             Modifier.drawBehind {
                 drawIntoCanvas { canvas ->
                     val nativePaint =
                         Paint().apply {
-                            color = shadowColor.copy(alpha = 1.0f).toArgb()
+                            color = shadowColor.toArgb()
                             maskFilter =
                                 BlurMaskFilter(
-                                    16.dp.toPx(),
+                                    20.dp.toPx(),
                                     BlurMaskFilter.Blur.NORMAL,
                                 )
                         }

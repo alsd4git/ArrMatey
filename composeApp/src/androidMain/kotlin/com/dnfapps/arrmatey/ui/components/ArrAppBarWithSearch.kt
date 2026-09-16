@@ -1,5 +1,6 @@
 package com.dnfapps.arrmatey.ui.components
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandIn
@@ -32,6 +33,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -52,12 +54,20 @@ fun ArrAppBarWithSearch(
     searchPlaceholder: String = mokoString(MR.strings.search),
     scrollBehavior: SearchBarScrollBehavior = SearchBarDefaults.enterAlwaysSearchBarScrollBehavior(),
     colors: AppBarWithSearchColors = SearchBarDefaults.appBarWithSearchColors(),
+    onSearch: ((String) -> Unit)? = null,
     navigationIcon: @Composable () -> Unit = {},
     actions: @Composable RowScope.() -> Unit = {},
     leadingIcon: @Composable () -> Unit = { Icon(Icons.Default.Search, null) },
     trailingIcon: @Composable () -> Unit = {},
 ) {
     val scope = rememberCoroutineScope()
+    val softwareKeyboardController = LocalSoftwareKeyboardController.current
+
+    BackHandler(enabled = searchBarState.isExpanded()) {
+        scope.launch {
+            searchBarState.animateToCollapsed()
+        }
+    }
 
     LaunchedEffect(textFieldEnabled) {
         if (!textFieldEnabled && searchBarState.isExpanded()) {
@@ -74,7 +84,10 @@ fun ArrAppBarWithSearch(
                     searchBarState = searchBarState,
                     enabled = textFieldEnabled,
                     colors = SearchBarDefaults.inputFieldColors(),
-                    onSearch = { scope.launch { searchBarState.animateToCollapsed() } },
+                    onSearch = { query ->
+                        softwareKeyboardController?.hide()
+                        onSearch?.invoke(query)
+                    },
                     placeholder = {
                         Text(
                             modifier = Modifier.clearAndSetSemantics {},

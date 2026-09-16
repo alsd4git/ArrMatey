@@ -32,7 +32,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
@@ -55,6 +54,7 @@ import com.dnfapps.arrmatey.arr.api.model.SearchAudiobook
 import com.dnfapps.arrmatey.compose.utils.bytesAsFileSizeString
 import com.dnfapps.arrmatey.discover.model.SearchResult
 import com.dnfapps.arrmatey.entensions.BULLET
+import com.dnfapps.arrmatey.entensions.colouredDropShadow
 import com.dnfapps.arrmatey.entensions.rememberHtml
 import com.dnfapps.arrmatey.entensions.unlessEmpty
 import com.dnfapps.arrmatey.extensions.pxToDp
@@ -153,14 +153,7 @@ fun SearchResultItem(
         }
 
     Box(
-        modifier =
-            Modifier // .colouredDropShadow(shadowColor)
-                .shadow(
-                    elevation = 10.dp,
-                    shape = RoundedCornerShape(10.dp),
-                    ambientColor = shadowColor,
-                    spotColor = shadowColor,
-                ),
+        modifier = Modifier.colouredDropShadow(shadowColor),
     ) {
         when (item) {
             is SearchResult.ArrMediaResult -> {
