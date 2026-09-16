@@ -16,9 +16,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.dnfapps.arrmatey.arr.api.model.QualityProfile
 import com.dnfapps.arrmatey.arr.api.model.Tag
+import com.dnfapps.arrmatey.client.paging.PagedData
 import com.dnfapps.arrmatey.instances.model.Instance
 import com.dnfapps.arrmatey.model.UnifiedMediaDetailsUiState
+import com.dnfapps.arrmatey.seerr.api.model.DiscoverResult
+import com.dnfapps.arrmatey.seerr.api.model.RequestType
 import com.dnfapps.arrmatey.shared.MR
+import com.dnfapps.arrmatey.ui.components.DiscoverSection
 import com.dnfapps.arrmatey.ui.components.InfoArea
 import com.dnfapps.arrmatey.ui.components.InfoCardData
 import com.dnfapps.arrmatey.ui.components.InfoCardInstanceFooter
@@ -35,10 +39,15 @@ fun OverviewTabContent(
     tags: List<Tag>,
     activeInstance: Instance?,
     activeSeerrInstance: Instance?,
+    recommendationsState: PagedData<DiscoverResult>,
+    similarState: PagedData<DiscoverResult>,
     isExpanded: Boolean,
     isDualPanel: Boolean,
     onEditPath: () -> Unit,
     onPersonClick: (Long) -> Unit,
+    onMediaClick: (Long, RequestType) -> Unit,
+    onLoadMoreRecommendations: () -> Unit,
+    onLoadMoreSimilar: () -> Unit,
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(24.dp),
@@ -52,6 +61,24 @@ fun OverviewTabContent(
 
         state.seerrMedia?.credits?.let { credits ->
             SeerrCreditsSection(credits) { onPersonClick(it) }
+        }
+
+        if (recommendationsState.items.isNotEmpty() || recommendationsState.isLoading) {
+            DiscoverSection(
+                title = MR.strings.recommended,
+                data = recommendationsState,
+                onItemClick = { onMediaClick(it.id, it.mediaType) },
+                onLoadMore = onLoadMoreRecommendations,
+            )
+        }
+
+        if (similarState.items.isNotEmpty() || similarState.isLoading) {
+            DiscoverSection(
+                title = MR.strings.similar,
+                data = similarState,
+                onItemClick = { onMediaClick(it.id, it.mediaType) },
+                onLoadMore = onLoadMoreSimilar,
+            )
         }
 
         val arrInfoItems = buildArrInfoItems(state, qualityProfiles, tags, onEditPath = onEditPath)

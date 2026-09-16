@@ -26,10 +26,10 @@ if ! git diff --quiet || ! git diff --cached --quiet; then
 
     echo "Auto-lint commit created. Re-triggering push to include formatting commit..."
 
-    # Re-run push with an environment guard to prevent looping
-    LINTING_PRE_PUSH=1 git push "$@"
+    # Re-run push with an environment guard to prevent looping (pushing HEAD to remote $1 and setting upstream)
+    LINTING_PRE_PUSH=1 git push -u "${1:-origin}" HEAD
 
-    # Abort the original push attempt since the branch ref changed
+    # Abort the original push attempt since the inner push has completed the push
     exit 1
 fi
 
