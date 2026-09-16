@@ -74,6 +74,7 @@ import com.dnfapps.arrmatey.arr.api.model.QueueItem
 import com.dnfapps.arrmatey.arr.state.CombinedDashboardState
 import com.dnfapps.arrmatey.arr.viewmodel.CombinedDashboardViewModel
 import com.dnfapps.arrmatey.compose.DashboardCards
+import com.dnfapps.arrmatey.datastore.PreferencesStore
 import com.dnfapps.arrmatey.discover.model.SearchResult
 import com.dnfapps.arrmatey.discover.viewmodel.DiscoverViewModel
 import com.dnfapps.arrmatey.entensions.PaddingValues
@@ -276,6 +277,7 @@ fun CombinedDashboard(
     viewModel: CombinedDashboardViewModel = koinViewModel(),
     discoverViewModel: DiscoverViewModel = koinViewModel(),
     requestsViewModel: RequestsViewModel = koinViewModel(),
+    preferencesStore: PreferencesStore = koinInject(),
     moko: MokoStrings = koinInject(),
     onNavigateToArrDashboard: (Long) -> Unit = {},
     onNavigateToMediaDetails: (id: Long, instanceType: InstanceType) -> Unit = { _, _ -> },
@@ -434,7 +436,19 @@ fun CombinedDashboard(
             }
         },
         floatingActionButton = {
-            if (isEditing && availableCards.isNotEmpty()) {
+            val showFab = isEditing && availableCards.isNotEmpty()
+            val useFloatingNavigationBar by preferencesStore.useFloatingNavigationBar.collectAsStateWithLifecycle(false)
+
+            com.dnfapps.arrmatey.ui.components.appbar.ProvideFloatingBarAction(
+                visible = useFloatingNavigationBar && showFab,
+                action =
+                    com.dnfapps.arrmatey.ui.components.appbar.FloatingBarAction(
+                        icon = { Icon(Icons.Default.Add, null) },
+                        onClick = { showAddCardSheet = true },
+                    ),
+            )
+
+            if (!useFloatingNavigationBar && showFab) {
                 ExtendedFloatingActionButton(
                     onClick = { showAddCardSheet = true },
                     icon = { Icon(Icons.Default.Add, null) },

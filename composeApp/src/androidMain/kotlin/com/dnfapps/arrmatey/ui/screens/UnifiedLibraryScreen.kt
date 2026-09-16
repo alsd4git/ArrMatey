@@ -59,6 +59,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dnfapps.arrmatey.arr.api.model.ArrMedia
 import com.dnfapps.arrmatey.arr.state.ArrLibrary
 import com.dnfapps.arrmatey.arr.viewmodel.UnifiedLibraryViewModel
+import com.dnfapps.arrmatey.datastore.PreferencesStore
 import com.dnfapps.arrmatey.entensions.openLink
 import com.dnfapps.arrmatey.instances.model.InstanceType
 import com.dnfapps.arrmatey.model.OperationStatus
@@ -69,6 +70,8 @@ import com.dnfapps.arrmatey.ui.components.ErrorView
 import com.dnfapps.arrmatey.ui.components.InstanceOptionsMenu
 import com.dnfapps.arrmatey.ui.components.MediaView
 import com.dnfapps.arrmatey.ui.components.NoInstanceView
+import com.dnfapps.arrmatey.ui.components.appbar.FloatingBarAction
+import com.dnfapps.arrmatey.ui.components.appbar.ProvideFloatingBarAction
 import com.dnfapps.arrmatey.ui.components.navigation.NavigationDrawerButton
 import com.dnfapps.arrmatey.ui.menu.LibraryFilterMenu
 import com.dnfapps.arrmatey.ui.sheets.ArrViewCustomizationSheet
@@ -89,6 +92,7 @@ fun UnifiedLibraryScreen(
     onNavigateToSearch: (String, InstanceType, Long?) -> Unit,
     onNavigateToDetails: (ArrMedia, InstanceType, Long?) -> Unit,
     unifiedLibraryViewModel: UnifiedLibraryViewModel = koinViewModel(),
+    globalPreferencesStore: PreferencesStore = org.koin.compose.koinInject(),
 ) {
     val context = LocalContext.current
     val navigationManager = navigationManager
@@ -132,9 +136,11 @@ fun UnifiedLibraryScreen(
             true -> {
                 Toast.makeText(context, searchQueuedMessage, Toast.LENGTH_SHORT).show()
             }
+
             false -> {
                 Toast.makeText(context, searchErrorMessage, Toast.LENGTH_SHORT).show()
             }
+
             else -> {}
         }
     }
@@ -190,19 +196,34 @@ fun UnifiedLibraryScreen(
     } else {
         val currentInstance = selectedInstance!!
         val currentType = currentInstance.type
+        val showFab = !wideRailIsVisible && !isInSelectionMode
+        val useFloatingNavigationBar by globalPreferencesStore.useFloatingNavigationBar.collectAsStateWithLifecycle(
+            false,
+        )
+
+        ProvideFloatingBarAction(
+            visible = useFloatingNavigationBar && showFab,
+            action =
+                FloatingBarAction(
+                    icon = { Icon(Icons.Default.Add, null) },
+                    onClick = { onNavigateToSearch("", currentType, currentInstance.id) },
+                ),
+        )
 
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             floatingActionButton = {
-                AnimatedVisibility(
-                    visible = !wideRailIsVisible && !isInSelectionMode,
-                    enter = scaleIn(animationSpec = tween(200)) + fadeIn(animationSpec = tween(200)),
-                    exit = scaleOut(animationSpec = tween(200)) + fadeOut(animationSpec = tween(200)),
-                ) {
-                    FloatingActionButton(
-                        onClick = { onNavigateToSearch("", currentType, currentInstance.id) },
+                if (!useFloatingNavigationBar) {
+                    AnimatedVisibility(
+                        visible = showFab,
+                        enter = scaleIn(animationSpec = tween(200)) + fadeIn(animationSpec = tween(200)),
+                        exit = scaleOut(animationSpec = tween(200)) + fadeOut(animationSpec = tween(200)),
                     ) {
-                        Icon(Icons.Default.Add, null)
+                        FloatingActionButton(
+                            onClick = { onNavigateToSearch("", currentType, currentInstance.id) },
+                        ) {
+                            Icon(Icons.Default.Add, null)
+                        }
                     }
                 }
             },
@@ -406,7 +427,11 @@ fun UnifiedLibraryScreen(
                                     )
                                 } else {
                                     EmptySearchResultsView(currentType, textFieldState.text.toString()) {
-                                        onNavigateToSearch(textFieldState.text.toString(), currentType, currentInstance.id)
+                                        onNavigateToSearch(
+                                            textFieldState.text.toString(),
+                                            currentType,
+                                            currentInstance.id,
+                                        )
                                     }
                                 }
                             }

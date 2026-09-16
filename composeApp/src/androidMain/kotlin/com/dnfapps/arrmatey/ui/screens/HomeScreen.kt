@@ -83,7 +83,13 @@ import com.dnfapps.arrmatey.navigation.LocalNavigationManager
 import com.dnfapps.arrmatey.navigation.NavigationManager
 import com.dnfapps.arrmatey.navigation.toSearch
 import com.dnfapps.arrmatey.shared.MR
+import com.dnfapps.arrmatey.ui.components.appbar.FloatingBarActionState
+import com.dnfapps.arrmatey.ui.components.appbar.FloatingNavigationBar
+import com.dnfapps.arrmatey.ui.components.appbar.FloatingNavigationBarItem
+import com.dnfapps.arrmatey.ui.components.appbar.LocalFloatingBarActionState
 import com.dnfapps.arrmatey.ui.components.navigation.DoubleBackToExit
+import com.dnfapps.arrmatey.ui.helpers.LocalFloatingBarBottomPadding
+import com.dnfapps.arrmatey.ui.helpers.LocalIsTabActive
 import com.dnfapps.arrmatey.ui.tabs.ActivityTab
 import com.dnfapps.arrmatey.ui.tabs.ArrTab
 import com.dnfapps.arrmatey.ui.tabs.BazarrTab
@@ -97,6 +103,7 @@ import com.dnfapps.arrmatey.ui.tabs.SettingsTabNavHost
 import com.dnfapps.arrmatey.ui.tabs.TracearrTab
 import com.dnfapps.arrmatey.ui.tabs.UnifiedLibraryTab
 import com.dnfapps.arrmatey.utils.mokoString
+import com.dnfapps.arrmatey.utils.navigationBarBottomInset
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -126,6 +133,7 @@ fun HomeScreen(
     val selectedTab by navigationManager.selectedTab.collectAsStateWithLifecycle()
 
     val useServiceNavIcons by preferencesStore.useServiceNavLogos.collectAsStateWithLifecycle(false)
+    val useFloatingNavigationBar by preferencesStore.useFloatingNavigationBar.collectAsStateWithLifecycle(false)
     val tabConfig by tabManager.tabConfiguration.collectAsStateWithLifecycle()
     if (tabConfig.isInitialValue) return
 
@@ -175,9 +183,22 @@ fun HomeScreen(
 
     DoubleBackToExit()
 
-    CompositionLocalProvider(LocalNavigationManager provides navigationManager) {
-        val isExpanded = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded
+    val isExpanded = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded
+    val floatingBarIsVisible = !isExpanded && useFloatingNavigationBar && overlayTab == null && visibleTabs.size > 1
+    val floatingBarBottomPadding =
+        if (floatingBarIsVisible) {
+            navigationBarBottomInset() + 80.dp
+        } else {
+            0.dp
+        }
 
+    val floatingBarActionState = remember { FloatingBarActionState() }
+
+    CompositionLocalProvider(
+        LocalNavigationManager provides navigationManager,
+        LocalFloatingBarBottomPadding provides floatingBarBottomPadding,
+        LocalFloatingBarActionState provides floatingBarActionState,
+    ) {
         val mainContent = @Composable {
             AnimatedContent(
                 targetState = overlayTab,
@@ -188,7 +209,9 @@ fun HomeScreen(
                 label = "OverlayTransition",
             ) { currentOverlay ->
                 if (currentOverlay != null) {
-                    TabItemContent(currentOverlay, windowSizeClass, false)
+                    CompositionLocalProvider(LocalIsTabActive provides true) {
+                        TabItemContent(currentOverlay, windowSizeClass, false)
+                    }
                 } else {
                     key(visibleTabs.isNotEmpty()) {
                         HorizontalPager(
@@ -199,7 +222,10 @@ fun HomeScreen(
                             key = { page -> visibleTabs[page].key },
                         ) { page ->
                             val wideRailIsVisible = isExpanded && overlayTab == null && visibleTabs.size > 1
-                            TabItemContent(visibleTabs[page], windowSizeClass, wideRailIsVisible)
+                            val isTabActive = overlayTab == null && pagerState.currentPage == page
+                            CompositionLocalProvider(LocalIsTabActive provides isTabActive) {
+                                TabItemContent(visibleTabs[page], windowSizeClass, wideRailIsVisible)
+                            }
                         }
                     }
                 }
@@ -323,6 +349,52 @@ fun HomeScreen(
                         }
                     }
                     mainContent()
+                }
+            } else if (useFloatingNavigationBar) {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    mainContent()
+                    if (overlayTab == null && visibleTabs.size > 1) {
+                        FloatingNavigationBar(
+                            modifier =
+                                Modifier
+                                    .align(Alignment.BottomCenter)
+                                    .padding(bottom = navigationBarBottomInset() + 16.dp),
+                        ) {
+                            visibleTabs.forEach { entry ->
+                                FloatingNavigationBarItem(
+                                    selected = entry == selectedTab,
+                                    onClick = { navigationManager.setSelectedTab(entry) },
+                                    icon = {
+                                        when (entry) {
+                                            is TabItem.Standard -> {
+                                                TabItemIconView(
+                                                    tabItem = entry,
+                                                    useServiceNavIcons = useServiceNavIcons,
+                                                    activityQueueIssuesCount = activityQueueIssuesCount,
+                                                )
+                                            }
+
+                                            is TabItem.CustomWebpage -> {
+                                                Icon(
+                                                    Icons.Default.Language,
+                                                    contentDescription = entry.name,
+                                                )
+                                            }
+
+                                            else -> {}
+                                        }
+                                    },
+                                    label = {
+                                        when (entry) {
+                                            is TabItem.Standard -> Text(text = mokoString(entry.resource))
+                                            is TabItem.CustomWebpage -> Text(text = entry.name)
+                                            else -> {}
+                                        }
+                                    },
+                                )
+                            }
+                        }
+                    }
                 }
             } else {
                 NavigationSuiteScaffold(
