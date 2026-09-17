@@ -108,33 +108,6 @@ fun DashboardNetworkSection(state: CombinedDashboardState.Success) {
                         }
 
                         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                            Box(
-                                modifier =
-                                    Modifier
-                                        .clip(MaterialTheme.shapes.small)
-                                        .background(
-                                            if (status.isOnline) {
-                                                ArrGreen.copy(alpha = 0.1f)
-                                            } else {
-                                                MaterialTheme.colorScheme.errorContainer.copy(
-                                                    alpha = 0.5f,
-                                                )
-                                            },
-                                        ).padding(horizontal = 8.dp, vertical = 4.dp),
-                            ) {
-                                Text(
-                                    text =
-                                        if (status.isOnline) {
-                                            mokoString(MR.strings.online)
-                                        } else {
-                                            mokoString(MR.strings.offline)
-                                        },
-                                    style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (status.isOnline) ArrGreen else MaterialTheme.colorScheme.error,
-                                )
-                            }
-
                             if (status.isLocalSwitchingEnabled) {
                                 Box(
                                     modifier =
@@ -162,6 +135,33 @@ fun DashboardNetworkSection(state: CombinedDashboardState.Success) {
                                         color = if (status.isLocal) ArrBlue else MaterialTheme.colorScheme.primary,
                                     )
                                 }
+                            }
+
+                            Box(
+                                modifier =
+                                    Modifier
+                                        .clip(MaterialTheme.shapes.small)
+                                        .background(
+                                            if (status.isOnline) {
+                                                ArrGreen.copy(alpha = 0.1f)
+                                            } else {
+                                                MaterialTheme.colorScheme.errorContainer.copy(
+                                                    alpha = 0.5f,
+                                                )
+                                            },
+                                        ).padding(horizontal = 8.dp, vertical = 4.dp),
+                            ) {
+                                Text(
+                                    text =
+                                        if (status.isOnline) {
+                                            mokoString(MR.strings.online)
+                                        } else {
+                                            mokoString(MR.strings.offline)
+                                        },
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (status.isOnline) ArrGreen else MaterialTheme.colorScheme.error,
+                                )
                             }
                         }
                     }
