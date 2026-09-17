@@ -3,6 +3,9 @@ package com.dnfapps.arrmatey.discover.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.dnfapps.arrmatey.arr.api.model.ArrMedia
+import com.dnfapps.arrmatey.arr.api.model.ArrMovie
+import com.dnfapps.arrmatey.arr.api.model.ArrSeries
+import com.dnfapps.arrmatey.arr.api.model.CalendarItem
 import com.dnfapps.arrmatey.client.paging.PagedData
 import com.dnfapps.arrmatey.client.paging.PagingController
 import com.dnfapps.arrmatey.database.InstanceRepository
@@ -17,11 +20,13 @@ import com.dnfapps.arrmatey.instances.model.InstanceType
 import com.dnfapps.arrmatey.instances.repository.InstanceManager
 import com.dnfapps.arrmatey.instances.repository.SeerrInstanceRepository
 import com.dnfapps.arrmatey.seerr.api.model.DiscoverResult
+import com.dnfapps.arrmatey.seerr.api.model.RequestType
 import com.dnfapps.arrmatey.seerr.usecase.GetDiscoverMoviesUseCase
 import com.dnfapps.arrmatey.seerr.usecase.GetDiscoverTvUseCase
 import com.dnfapps.arrmatey.seerr.usecase.GetTrendingUseCase
 import com.dnfapps.arrmatey.seerr.usecase.GetUpcomingMoviesUseCase
 import com.dnfapps.arrmatey.seerr.usecase.GetUpcomingTvUseCase
+import com.dnfapps.networking.asSuccess
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.Job
@@ -168,11 +173,56 @@ class DiscoverViewModel(
     val searchState: StateFlow<List<SearchResult>> =
         combine(_searchState, allLibraries) { results, libraries ->
             results.map { result ->
-                if (result is SearchResult.ArrMediaResult) {
-                    val merged = listOf(result.media).mergeWithLibrary(libraries).first()
-                    result.copy(media = merged)
-                } else {
-                    result
+                when (result) {
+                    is SearchResult.ArrMediaResult -> {
+                        val merged = listOf(result.media).mergeWithLibrary(libraries).first()
+                        result.copy(media = merged)
+                    }
+
+                    is SearchResult.SeerrMediaResult -> {
+                        val tmdbId = result.result.id
+                        val cleanTitle = (result.result.title ?: result.result.name)?.replace(Regex("[^a-zA-Z0-9]"), "")?.lowercase()
+                        val match =
+                            if (result.result.mediaType == RequestType.Movie) {
+                                libraries
+                                    .filterIsInstance<ArrMovie>()
+                                    .firstOrNull {
+                                        (it.tmdbId != 0L && it.tmdbId == tmdbId) ||
+                                            (cleanTitle != null && it.cleanTitle?.equals(cleanTitle, ignoreCase = true) == true)
+                                    }
+                            } else if (result.result.mediaType == RequestType.Tv) {
+                                libraries.filterIsInstance<ArrSeries>().firstOrNull {
+                                    (it.tmdbId != null && it.tmdbId != 0L && it.tmdbId == tmdbId) ||
+                                        (cleanTitle != null && it.cleanTitle?.equals(cleanTitle, ignoreCase = true) == true)
+                                }
+                            } else {
+                                null
+                            }
+
+                        if (match != null) {
+                            val instanceId =
+                                (match as? ArrMovie)?.instanceId
+                                    ?: (match as? CalendarItem)?.instanceId
+                                    ?: instanceManager
+                                        .getAllArrRepositories()
+                                        .firstOrNull { repo ->
+                                            repo.library.value
+                                                ?.asSuccess()
+                                                ?.data
+                                                ?.any { it.id == match.id } == true
+                                        }?.instance
+                                        ?.id
+                            SearchResult.ArrMediaResult(
+                                media = match,
+                                instanceId = instanceId,
+                                originalRank = result.originalRank,
+                            )
+                        } else {
+                            result
+                        }
+                    }
+
+                    is SearchResult.SeerrPersonResult -> result
                 }
             }
         }.stateIn(
@@ -186,14 +236,6 @@ class DiscoverViewModel(
 
     val searchShowBanners: StateFlow<Boolean> =
         preferencesStore.searchShowBanners
-            .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5000),
-                initialValue = false,
-            )
-
-    val searchShowInstanceIndicatorShadow: StateFlow<Boolean> =
-        preferencesStore.searchShowInstanceIndicatorShadow
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5000),
@@ -274,7 +316,9 @@ class DiscoverViewModel(
                     if (query.isNotEmpty()) {
                         performSearch(query)
                     } else {
+                        searchJob?.cancel()
                         _searchState.value = emptyList()
+                        _isSearching.value = false
                     }
                 }
         }
@@ -285,13 +329,23 @@ class DiscoverViewModel(
         searchJob =
             viewModelScope.launch {
                 _isSearching.value = true
-                _searchState.value = globalSearchUseCase(query)
+                _searchState.value = emptyList()
+                globalSearchUseCase(query).collect { results ->
+                    _searchState.value = results
+                }
                 _isSearching.value = false
             }
     }
 
     fun updateSearchQuery(query: String) {
-        _searchQuery.value = query
+        if (_searchQuery.value != query) {
+            searchJob?.cancel()
+            _isSearching.value = false
+            _searchQuery.value = query
+            if (query.isEmpty()) {
+                _searchState.value = emptyList()
+            }
+        }
     }
 
     fun loadNextTrendingPage() {

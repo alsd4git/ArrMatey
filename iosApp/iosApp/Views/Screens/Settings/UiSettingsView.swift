@@ -79,12 +79,12 @@ struct UiSettingsView: View {
                     }
                 }
                 Toggle(isOn: Binding(
-                    get: { viewModel.searchShowInstanceIndicatorShadow },
-                    set: { _ in viewModel.toggleSearchShowInstanceIndicatorShadow() }
+                    get: { viewModel.unifiedLibrarySearchAllInstances },
+                    set: { _ in viewModel.toggleUnifiedLibrarySearchAllInstances() }
                 )) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(MR.strings().search_show_instance_indicator_shadow.localized())
-                        Text(MR.strings().search_show_instance_indicator_shadow_description.localized())
+                        Text(MR.strings().unified_library_search_all_instances_title.localized())
+                        Text(MR.strings().unified_library_search_all_instances_description.localized())
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }

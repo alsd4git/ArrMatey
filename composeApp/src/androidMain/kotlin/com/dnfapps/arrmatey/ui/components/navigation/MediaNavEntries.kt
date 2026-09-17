@@ -5,6 +5,7 @@ import androidx.navigation3.runtime.NavKey
 import com.dnfapps.arrmatey.arr.api.model.ArrMedia
 import com.dnfapps.arrmatey.arr.api.model.ReleaseParams
 import com.dnfapps.arrmatey.compose.utils.ReleaseFilterBy
+import com.dnfapps.arrmatey.discover.model.SearchResult
 import com.dnfapps.arrmatey.instances.model.InstanceType
 import com.dnfapps.arrmatey.navigation.MediaScreen
 import com.dnfapps.arrmatey.navigation.Navigator
@@ -33,6 +34,7 @@ import com.dnfapps.arrmatey.ui.screens.MediaPreviewScreen
 import com.dnfapps.arrmatey.ui.screens.MovieFilesScreen
 import com.dnfapps.arrmatey.ui.screens.SeerrPersonDetailsScreen
 import com.dnfapps.arrmatey.ui.screens.UnifiedMediaDetailsScreen
+import com.dnfapps.arrmatey.ui.screens.UnifiedSearchScreen
 import com.dnfapps.arrmatey.ui.screens.WebViewScreen
 import com.dnfapps.arrmatey.utils.mokoString
 
@@ -214,6 +216,25 @@ fun EntryProviderScope<NavKey>.mediaNavEntries(
                 },
             )
         }
+    }
+    entry<MediaScreen.GlobalSearch> { search ->
+        UnifiedSearchScreen(
+            initialQuery = search.query,
+            onBack = { navigation.popBackStack() },
+            onItemClick = { result ->
+                when (result) {
+                    is SearchResult.ArrMediaResult -> {
+                        navigation.toArrDetailsOrPreview(result.media, result.instanceType)
+                    }
+                    is SearchResult.SeerrMediaResult -> {
+                        navigation.toDetails(tmdbId = result.result.id, requestType = result.result.mediaType)
+                    }
+                    is SearchResult.SeerrPersonResult -> {
+                        navigation.toPersonDetails(result.result.id)
+                    }
+                }
+            },
+        )
     }
     entry<MediaScreen.Preview<ArrMedia>> { preview ->
         val type = preview.type ?: defaultInstanceType

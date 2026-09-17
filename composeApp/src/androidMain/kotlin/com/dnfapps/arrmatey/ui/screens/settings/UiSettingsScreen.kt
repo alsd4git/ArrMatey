@@ -13,13 +13,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Shortcut
-import androidx.compose.material.icons.filled.BrightnessLow
 import androidx.compose.material.icons.filled.Contrast
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.MiscellaneousServices
 import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Navigation
 import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Splitscreen
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.DropdownMenu
@@ -75,7 +75,7 @@ fun UiSettingsScreen(
     val useFloatingNavigationBar by viewModel.useFloatingNavigationBar.collectAsStateWithLifecycle()
     val dualPanelSupport by viewModel.dualPanelSupport.collectAsStateWithLifecycle()
     val searchShowBanners by viewModel.searchShowBanners.collectAsStateWithLifecycle()
-    val searchShowInstanceIndicatorShadow by viewModel.searchShowInstanceIndicatorShadow.collectAsStateWithLifecycle()
+    val unifiedLibrarySearchAllInstances by viewModel.unifiedLibrarySearchAllInstances.collectAsStateWithLifecycle()
     val discoverSectionPreferences by viewModel.discoverSectionPreferences.collectAsStateWithLifecycle()
 
     var showDiscoverCustomizationSheet by remember { mutableStateOf(false) }
@@ -282,16 +282,16 @@ fun UiSettingsScreen(
                             onClick = { viewModel.toggleSearchShowBanners() },
                         ),
                         SettingItem(
-                            icon = IconSource.Vector(Icons.Default.BrightnessLow),
-                            title = mokoString(MR.strings.search_show_instance_indicator_shadow),
-                            subtitle = mokoString(MR.strings.search_show_instance_indicator_shadow_description),
+                            icon = IconSource.Vector(Icons.Default.Search),
+                            title = mokoString(MR.strings.unified_library_search_all_instances_title),
+                            subtitle = mokoString(MR.strings.unified_library_search_all_instances_description),
                             trailingContent = {
                                 Switch(
-                                    checked = searchShowInstanceIndicatorShadow,
-                                    onCheckedChange = { viewModel.toggleSearchShowInstanceIndicatorShadow() },
+                                    checked = unifiedLibrarySearchAllInstances,
+                                    onCheckedChange = { viewModel.toggleUnifiedLibrarySearchAllInstances() },
                                 )
                             },
-                            onClick = { viewModel.toggleSearchShowInstanceIndicatorShadow() },
+                            onClick = { viewModel.toggleUnifiedLibrarySearchAllInstances() },
                         ),
                     ),
             )

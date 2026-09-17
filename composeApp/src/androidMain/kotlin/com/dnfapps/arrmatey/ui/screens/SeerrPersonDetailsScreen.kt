@@ -4,14 +4,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridScope
@@ -20,8 +17,6 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Movie
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -35,9 +30,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -189,7 +182,6 @@ fun SeerrPersonDetailsScreen(
                                 if (personCredits.cast.isNotEmpty()) {
                                     seerrCreditsGrid(
                                         title = MR.strings.appearances,
-                                        icon = Icons.Default.Movie,
                                         items = personCredits.cast,
                                         onItemClick = { result ->
                                             onMediaClick(result.id, result.mediaType)
@@ -199,7 +191,6 @@ fun SeerrPersonDetailsScreen(
                                 if (personCredits.crew.isNotEmpty()) {
                                     seerrCreditsGrid(
                                         title = MR.strings.crew,
-                                        icon = Icons.Default.Settings,
                                         items = personCredits.crew,
                                         onItemClick = { result ->
                                             onMediaClick(result.id, result.mediaType)
@@ -233,23 +224,14 @@ fun SeerrPersonDetailsScreen(
 
 private fun LazyGridScope.seerrCreditsGrid(
     title: StringResource,
-    icon: ImageVector,
     items: List<DiscoverResult>,
     onItemClick: (DiscoverResult) -> Unit,
 ) {
     item(span = { GridItemSpan(maxLineSpan) }) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(top = 12.dp),
-        ) {
-            Icon(icon, null, modifier = Modifier.size(20.dp))
-            Spacer(Modifier.width(8.dp))
-            Text(
-                text = mokoString(title),
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-            )
-        }
+        Text(
+            text = mokoString(title),
+            style = MaterialTheme.typography.titleLarge,
+        )
     }
 
     items(items) { item ->

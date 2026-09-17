@@ -78,12 +78,12 @@ class PreferencesStore(
     private val localNetworkNoticeSeenKey = booleanPreferencesKey("localNetworkNoticeSeen")
     private val localNetworkPermissionInfoDismissedKey = booleanPreferencesKey("localNetworkPermissionInfoDismissed")
     private val searchShowBannersKey = booleanPreferencesKey("searchShowBanners")
-    private val searchShowInstanceIndicatorShadowKey = booleanPreferencesKey("searchShowInstanceIndicatorShadow")
     private val dualPanelSupportKey = booleanPreferencesKey("dualPanelSupport")
     private val smartAddSeerrActionKey = stringPreferencesKey("smartAddSeerrAction")
     private val combineSeerrArrMediaKey = booleanPreferencesKey("combineSeerrArrMedia")
     private val bazarrDetailsIntegrationKey = booleanPreferencesKey("bazarrDetailsIntegration")
     private val tracearrDetailsIntegrationKey = booleanPreferencesKey("tracearrDetailsIntegration")
+    private val unifiedLibrarySearchAllInstancesKey = booleanPreferencesKey("unifiedLibrarySearchAllInstances")
     private val useFloatingNavigationBarKey = booleanPreferencesKey("useFloatingNavigationBar")
 
     private fun infoCardKey(type: InstanceType): Preferences.Key<Boolean> =
@@ -163,16 +163,16 @@ class PreferencesStore(
                 preferences[useClearLogoKey] ?: true
             }
 
+    val unifiedLibrarySearchAllInstances: Flow<Boolean> =
+        dataStore.data
+            .map { preferences ->
+                preferences[unifiedLibrarySearchAllInstancesKey] ?: true
+            }
+
     val searchShowBanners: Flow<Boolean> =
         dataStore.data
             .map { preferences ->
                 preferences[searchShowBannersKey] ?: true
-            }
-
-    val searchShowInstanceIndicatorShadow: Flow<Boolean> =
-        dataStore.data
-            .map { preferences ->
-                preferences[searchShowInstanceIndicatorShadowKey] ?: true
             }
 
     val dualPanelSupport: Flow<Boolean> =
@@ -338,20 +338,26 @@ class PreferencesStore(
         }
     }
 
+    fun toggleUnifiedLibrarySearchAllInstances() {
+        scope.launch {
+            dataStore.edit { preferences ->
+                val current = preferences[unifiedLibrarySearchAllInstancesKey] ?: true
+                preferences[unifiedLibrarySearchAllInstancesKey] = !current
+            }
+        }
+    }
+
+    fun setUnifiedLibrarySearchAllInstances(value: Boolean) {
+        scope.launch {
+            dataStore.edit { it[unifiedLibrarySearchAllInstancesKey] = value }
+        }
+    }
+
     fun toggleSearchShowBanners() {
         scope.launch {
             dataStore.edit { preferences ->
                 val current = preferences[searchShowBannersKey] ?: true
                 preferences[searchShowBannersKey] = !current
-            }
-        }
-    }
-
-    fun toggleSearchShowInstanceIndicatorShadow() {
-        scope.launch {
-            dataStore.edit { preferences ->
-                val current = preferences[searchShowInstanceIndicatorShadowKey] ?: true
-                preferences[searchShowInstanceIndicatorShadowKey] = !current
             }
         }
     }

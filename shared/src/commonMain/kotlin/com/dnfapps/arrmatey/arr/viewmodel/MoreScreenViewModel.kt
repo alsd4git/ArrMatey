@@ -87,14 +87,6 @@ class MoreScreenViewModel(
                 initialValue = true,
             )
 
-    val searchShowInstanceIndicatorShadow =
-        preferencesStore.searchShowInstanceIndicatorShadow
-            .stateIn(
-                scope = viewModelScope,
-                started = SharingStarted.WhileSubscribed(5000),
-                initialValue = true,
-            )
-
     val dualPanelSupport =
         preferencesStore.dualPanelSupport
             .stateIn(
@@ -129,6 +121,14 @@ class MoreScreenViewModel(
 
     val tracearrDetailsIntegration =
         preferencesStore.tracearrDetailsIntegration
+            .stateIn(
+                scope = viewModelScope,
+                started = SharingStarted.WhileSubscribed(5000),
+                initialValue = true,
+            )
+
+    val unifiedLibrarySearchAllInstances =
+        preferencesStore.unifiedLibrarySearchAllInstances
             .stateIn(
                 scope = viewModelScope,
                 started = SharingStarted.WhileSubscribed(5000),
@@ -311,10 +311,6 @@ class MoreScreenViewModel(
         preferencesStore.toggleSearchShowBanners()
     }
 
-    fun toggleSearchShowInstanceIndicatorShadow() {
-        preferencesStore.toggleSearchShowInstanceIndicatorShadow()
-    }
-
     fun toggleDualPanelSupport() {
         preferencesStore.toggleDualPanelSupport()
     }
@@ -333,6 +329,10 @@ class MoreScreenViewModel(
 
     fun toggleTracearrDetailsIntegration() {
         preferencesStore.toggleTracearrDetailsIntegration()
+    }
+
+    fun toggleUnifiedLibrarySearchAllInstances() {
+        preferencesStore.toggleUnifiedLibrarySearchAllInstances()
     }
 
     fun updateDiscoverSectionPreferences(prefs: DiscoverSectionPreferences) {

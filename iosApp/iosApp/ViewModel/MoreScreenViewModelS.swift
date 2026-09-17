@@ -20,6 +20,7 @@ class MoreScreenViewModelS: ObservableObject {
     @Published private(set) var hideInstanceSwitcher: Bool = false
     @Published private(set) var searchShowBanners: Bool = true
     @Published private(set) var searchShowInstanceIndicatorShadow: Bool = true
+    @Published private(set) var unifiedLibrarySearchAllInstances: Bool = true
     @Published private(set) var smartAddSeerrAction: SmartAddSeerrAction = .alwaysAsk
     @Published private(set) var combineSeerrArrMedia: Bool = true
     @Published private(set) var bazarrDetailsIntegration: Bool = true
@@ -47,8 +48,8 @@ class MoreScreenViewModelS: ObservableObject {
         viewModel.searchShowBanners.observeAsync(on: self) { owner, show in
             owner.searchShowBanners = show.boolValue
         }
-        viewModel.searchShowInstanceIndicatorShadow.observeAsync(on: self) { owner, show in
-            owner.searchShowInstanceIndicatorShadow = show.boolValue
+        viewModel.unifiedLibrarySearchAllInstances.observeAsync(on: self) { owner, searchAll in
+            owner.unifiedLibrarySearchAllInstances = searchAll.boolValue
         }
         viewModel.combineSeerrArrMedia.observeAsync(on: self) { owner, combine in
             owner.combineSeerrArrMedia = combine.boolValue
@@ -90,8 +91,8 @@ class MoreScreenViewModelS: ObservableObject {
         viewModel.toggleSearchShowBanners()
     }
 
-    func toggleSearchShowInstanceIndicatorShadow() {
-        viewModel.toggleSearchShowInstanceIndicatorShadow()
+    func toggleUnifiedLibrarySearchAllInstances() {
+        viewModel.toggleUnifiedLibrarySearchAllInstances()
     }
 
     func toggleCombineSeerrArrMedia() {
