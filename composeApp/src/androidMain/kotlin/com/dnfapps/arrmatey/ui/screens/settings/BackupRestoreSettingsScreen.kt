@@ -13,6 +13,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.RocketLaunch
 import androidx.compose.material.icons.filled.Upload
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LargeTopAppBar
@@ -46,6 +47,7 @@ import org.koin.compose.viewmodel.koinViewModel
 @Composable
 fun BackupRestoreSettingsScreen(
     onBack: () -> Unit,
+    onNavigateToOnboarding: () -> Unit,
     backupViewModel: BackupViewModel = koinViewModel(),
     moko: MokoStrings = koinInject(),
 ) {
@@ -124,6 +126,18 @@ fun BackupRestoreSettingsScreen(
                             title = mokoString(MR.strings.restore),
                             subtitle = mokoString(MR.strings.restore_description),
                             onClick = { importLauncher.launch(arrayOf("application/json")) },
+                        ),
+                    ),
+            )
+
+            SettingsGroup(
+                title = mokoString(MR.strings.onboarding),
+                items =
+                    listOf(
+                        SettingItem(
+                            icon = IconSource.Vector(Icons.Default.RocketLaunch),
+                            title = mokoString(MR.strings.dev_settings_launch_onboarding),
+                            onClick = onNavigateToOnboarding,
                         ),
                     ),
             )

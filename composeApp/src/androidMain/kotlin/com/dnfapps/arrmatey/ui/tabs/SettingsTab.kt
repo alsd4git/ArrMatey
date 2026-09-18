@@ -21,6 +21,7 @@ import com.dnfapps.arrmatey.navigation.toEditCustomWebpage
 import com.dnfapps.arrmatey.navigation.toEditDownloadClient
 import com.dnfapps.arrmatey.navigation.toEditInstance
 import com.dnfapps.arrmatey.navigation.toIntegrations
+import com.dnfapps.arrmatey.navigation.toOnboarding
 import com.dnfapps.arrmatey.navigation.toServices
 import com.dnfapps.arrmatey.navigation.toShortcutsPreferences
 import com.dnfapps.arrmatey.navigation.toTabPreferences
@@ -37,6 +38,7 @@ import com.dnfapps.arrmatey.ui.screens.EditInstanceScreen
 import com.dnfapps.arrmatey.ui.screens.SettingsScreen
 import com.dnfapps.arrmatey.ui.screens.ShortcutsCustomizationScreen
 import com.dnfapps.arrmatey.ui.screens.TabCustomizationScreen
+import com.dnfapps.arrmatey.ui.screens.onboarding.OnboardingScreen
 import com.dnfapps.arrmatey.ui.screens.settings.BackupRestoreSettingsScreen
 import com.dnfapps.arrmatey.ui.screens.settings.IntegrationsSettingsScreen
 import com.dnfapps.arrmatey.ui.screens.settings.ServicesSettingsScreen
@@ -101,6 +103,7 @@ fun SettingsTabNavHost(
                 entry<SettingsScreen.BackupRestore> {
                     BackupRestoreSettingsScreen(
                         onBack = { navigation.popBackStack() },
+                        onNavigateToOnboarding = { navigation.toOnboarding() },
                     )
                 }
                 entry<SettingsScreen.AddInstance> {
@@ -118,7 +121,13 @@ fun SettingsTabNavHost(
                 }
                 entry<SettingsScreen.Dev> {
                     DevSettingsScreen(
+                        onNavigateToOnboarding = { navigation.toOnboarding() },
                         onBack = { navigation.popBackStack() },
+                    )
+                }
+                entry<SettingsScreen.Onboarding> {
+                    OnboardingScreen(
+                        onComplete = { navigation.popBackStack() },
                     )
                 }
                 entry<SettingsScreen.TabPreferences> {
