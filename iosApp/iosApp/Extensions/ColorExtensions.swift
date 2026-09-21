@@ -87,6 +87,27 @@ extension Color {
     static let jellyfinColor = Color(hex: 0xAA5CC3)
     static let embyColor = Color(hex: 0x52B54B)
 
+    // Semantic System Colors
+    static var systemGroupedBg: Color {
+        Color(uiColor: .systemGroupedBackground)
+    }
+
+    static var secondarySystemGroupedBg: Color {
+        Color(uiColor: .secondarySystemGroupedBackground)
+    }
+
+    static var tertiarySystemGroupedBg: Color {
+        Color(uiColor: .tertiarySystemGroupedBackground)
+    }
+
+    static var systemBg: Color {
+        Color(uiColor: .systemBackground)
+    }
+
+    static var secondarySystemBg: Color {
+        Color(uiColor: .secondarySystemBackground)
+    }
+
     static func serverColor(type: TracearrServerType?, name: String? = nil) -> Color {
         if type == .plex {
             return .plexColor
@@ -108,8 +129,52 @@ extension Color {
     }
 }
 
+extension InstanceType {
+    var associatedSwiftColor: Color {
+        switch self {
+        case .sonarr: return .arrBlue
+        case .radarr: return .arrOrange
+        case .lidarr: return .arrGreen
+        case .bookshelf: return .arrRed
+        case .listenarr: return .arrLightPurple
+        case .seerr: return .arrPurple
+        case .prowlarr: return .arrOrange
+        case .bazarr: return Color(hex: 0x0FA3B1)
+        case .tracearr: return Color(hex: 0x00b4d8)
+        default: return .accentColor
+        }
+    }
+}
+
 extension UInt64 {
     func toSwiftUI() -> Color {
         return Color(argb: self)
+    }
+}
+
+extension View {
+    /// Applies standard Apple card background with subtle border and material styling
+    func appleCardBackground(cornerRadius: CGFloat = 16, material: Material = .regularMaterial) -> some View {
+        self.background(
+            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                .fill(material)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                .stroke(Color.primary.opacity(0.06), lineWidth: 1)
+        )
+    }
+
+    /// Applies floating capsule material styling
+    func floatingCapsuleBackground(material: Material = .ultraThinMaterial) -> some View {
+        self.background(
+            Capsule(style: .continuous)
+                .fill(material)
+        )
+        .overlay(
+            Capsule(style: .continuous)
+                .stroke(Color.primary.opacity(0.08), lineWidth: 0.5)
+        )
+        .shadow(color: Color.black.opacity(0.12), radius: 12, x: 0, y: 4)
     }
 }

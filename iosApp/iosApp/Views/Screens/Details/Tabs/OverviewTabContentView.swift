@@ -31,8 +31,10 @@ struct OverviewTabContentView: View {
                     onItemClick: { item in
                         navigationManager.goToSeerrDetails(tmdbId: item.id, requestType: item.mediaType)
                     },
-                    onLoadMore: { viewModel.loadNextRecommendationsPage() }
+                    onLoadMore: { viewModel.loadNextRecommendationsPage() },
+                    horizontalPadding: 20
                 )
+                .padding(.horizontal, -20)
             }
 
             if !viewModel.similarState.items.isEmpty || viewModel.similarState.isLoading {
@@ -43,8 +45,10 @@ struct OverviewTabContentView: View {
                     onItemClick: { item in
                         navigationManager.goToSeerrDetails(tmdbId: item.id, requestType: item.mediaType)
                     },
-                    onLoadMore: { viewModel.loadNextSimilarPage() }
+                    onLoadMore: { viewModel.loadNextSimilarPage() },
+                    horizontalPadding: 20
                 )
+                .padding(.horizontal, -20)
             }
 
             unifiedInfoArea(success)
@@ -69,7 +73,9 @@ struct OverviewTabContentView: View {
                             }
                         }
                     }
+                    .padding(.horizontal, 20)
                 }
+                .padding(.horizontal, -20)
             }
 
             if !crew.isEmpty {
@@ -84,7 +90,9 @@ struct OverviewTabContentView: View {
                             }
                         }
                     }
+                    .padding(.horizontal, 20)
                 }
+                .padding(.horizontal, -20)
             }
         }
     }
