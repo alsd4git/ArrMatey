@@ -11,6 +11,8 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import io.ktor.serialization.kotlinx.json.json
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
@@ -28,7 +30,7 @@ class TracearrRepositoryTest {
             enabled = true,
         )
 
-    private fun createHttpClient(handler: (requestUrl: String) -> String): HttpClient {
+    private fun createHttpClient(handler: suspend (requestUrl: String) -> String): HttpClient {
         val mockEngine =
             MockEngine { request ->
                 val urlString = request.url.toString()
@@ -52,6 +54,7 @@ class TracearrRepositoryTest {
     @Test
     fun testGetPublicStreamsFetchesAndCachesMediaDetailsDeduplicated() =
         runTest {
+            val mutex = Mutex()
             var mediaCallCount = 0
             val requestedMediaRefs = mutableListOf<String>()
 
@@ -84,9 +87,11 @@ class TracearrRepositoryTest {
                             }
                             """.trimIndent()
                         url.contains("/v2/public/media/") -> {
-                            mediaCallCount++
                             val ref = url.substringAfter("/v2/public/media/")
-                            requestedMediaRefs.add(ref)
+                            mutex.withLock {
+                                mediaCallCount++
+                                requestedMediaRefs.add(ref)
+                            }
                             """
                             {
                               "id": "$ref",
@@ -110,7 +115,7 @@ class TracearrRepositoryTest {
             assertEquals("Title for show-100", streams1[2].mediaDetails?.title)
 
             assertEquals(2, mediaCallCount)
-            assertEquals(listOf("movie-1", "show-100"), requestedMediaRefs)
+            assertEquals(listOf("movie-1", "show-100"), requestedMediaRefs.sorted())
 
             val result2 = repository.getPublicStreams()
             assertTrue(result2 is NetworkResult.Success)
