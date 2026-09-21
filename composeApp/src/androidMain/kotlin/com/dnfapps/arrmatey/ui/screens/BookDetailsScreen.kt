@@ -16,15 +16,14 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -37,7 +36,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dnfapps.arrmatey.arr.api.model.Author
 import com.dnfapps.arrmatey.arr.api.model.Book
@@ -57,6 +55,8 @@ import com.dnfapps.arrmatey.ui.components.HistoryItemView
 import com.dnfapps.arrmatey.ui.components.ItemDescriptionCard
 import com.dnfapps.arrmatey.ui.components.OverlayTopAppBar
 import com.dnfapps.arrmatey.ui.components.ReleaseDownloadButtons
+import com.dnfapps.arrmatey.ui.components.sheets.ArrDestructiveConfirmationSheet
+import com.dnfapps.arrmatey.ui.helpers.LocalFloatingBarBottomPadding
 import com.dnfapps.arrmatey.ui.helpers.LocalIsInTwoPane
 import com.dnfapps.arrmatey.utils.dp
 import com.dnfapps.arrmatey.utils.format
@@ -64,6 +64,7 @@ import com.dnfapps.arrmatey.utils.mokoString
 import org.koin.compose.viewmodel.koinViewModel
 import org.koin.core.parameter.parametersOf
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun BookDetailsScreen(
     book: Book,
@@ -72,7 +73,11 @@ fun BookDetailsScreen(
     wideRailIsVisible: Boolean = false,
     onBack: () -> Unit = {},
     onNavigateToBookRelease: (Long) -> Unit = {},
-    viewModel: BookDetailsViewModel = koinViewModel(key = "${author.id}_${book.id}", parameters = { parametersOf(author.id, book) }),
+    viewModel: BookDetailsViewModel =
+        koinViewModel(
+            key = "${author.id}_${book.id}",
+            parameters = { parametersOf(author.id, book) },
+        ),
 ) {
     val context = LocalContext.current
     val scrollState = rememberScrollState()
@@ -93,12 +98,14 @@ fun BookDetailsScreen(
                 Toast.makeText(context, status.message ?: "Updated", Toast.LENGTH_SHORT).show()
                 viewModel.resetMonitorStatus()
             }
+
             is OperationStatus.Error -> {
                 status.message?.let { message ->
                     Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                 }
                 viewModel.resetMonitorStatus()
             }
+
             else -> {}
         }
     }
@@ -108,11 +115,13 @@ fun BookDetailsScreen(
             is OperationStatus.Success -> {
                 Toast.makeText(context, status.message ?: "Deleted", Toast.LENGTH_SHORT).show()
             }
+
             is OperationStatus.Error -> {
                 status.message?.let { message ->
                     Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                 }
             }
+
             else -> {}
         }
     }
@@ -218,8 +227,7 @@ fun BookDetailsScreen(
 
                     Text(
                         text = mokoString(MR.strings.files),
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Medium,
+                        style = MaterialTheme.typography.titleLarge,
                     )
                     if (bookFiles.isNotEmpty()) {
                         bookFiles.forEach { file ->
@@ -240,15 +248,14 @@ fun BookDetailsScreen(
                                 modifier = Modifier.fillMaxSize(),
                                 contentAlignment = Alignment.Center,
                             ) {
-                                CircularProgressIndicator()
+                                androidx.compose.material3.LoadingIndicator()
                             }
                         }
 
                         is HistoryState.Success -> {
                             Text(
                                 mokoString(MR.strings.history),
-                                fontSize = 22.sp,
-                                fontWeight = FontWeight.Medium,
+                                style = MaterialTheme.typography.titleLarge,
                             )
                             if (historyResult.items.isEmpty()) {
                                 Text(
@@ -267,28 +274,21 @@ fun BookDetailsScreen(
                         is HistoryState.Error -> {}
                         else -> {}
                     }
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(12.dp + LocalFloatingBarBottomPadding.current))
                 }
             }
 
             if (confirmDelete) {
-                AlertDialog(
+                ArrDestructiveConfirmationSheet(
                     onDismissRequest = { confirmDelete = false },
-                    title = { Text(mokoString(MR.strings.are_you_sure)) },
-                    text = { Text(mokoString(MR.strings.book_delete_message)) },
-                    dismissButton = {
-                        TextButton(
-                            onClick = { confirmDelete = false },
-                        ) { Text(mokoString(MR.strings.cancel)) }
+                    onConfirm = {
+                        confirmDelete = false
+                        viewModel.deleteBook()
                     },
-                    confirmButton = {
-                        TextButton(
-                            onClick = {
-                                confirmDelete = false
-                                viewModel.deleteBook()
-                            },
-                        ) { Text(mokoString(MR.strings.yes)) }
-                    },
+                    title = mokoString(MR.strings.are_you_sure),
+                    text = mokoString(MR.strings.book_delete_message),
+                    confirmText = mokoString(MR.strings.yes),
+                    dismissText = mokoString(MR.strings.cancel),
                 )
             }
         }
@@ -300,6 +300,7 @@ fun BookFileCard(file: BookFile) {
     ContainerCard {
         Text(
             text = file.path?.breakable() ?: "",
+            style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.SemiBold,
         )
         Text(
@@ -308,12 +309,14 @@ fun BookFileCard(file: BookFile) {
                     file.quality?.qualityLabel,
                     file.size?.bytesAsFileSizeString(),
                 ).joinToString(BULLET),
-            fontSize = 12.sp,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         file.dateAdded?.format("MMM d, yyyy")?.let { formattedDate ->
             Text(
                 text = mokoString(MR.strings.add, formattedDate),
-                fontSize = 12.sp,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }

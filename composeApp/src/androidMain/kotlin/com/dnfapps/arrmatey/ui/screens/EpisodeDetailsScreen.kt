@@ -16,17 +16,16 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -39,7 +38,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dnfapps.arrmatey.arr.api.model.ArrSeries
 import com.dnfapps.arrmatey.arr.api.model.Episode
@@ -64,6 +62,8 @@ import com.dnfapps.arrmatey.ui.components.bazarr.BazarrSubtitlesSection
 import com.dnfapps.arrmatey.ui.components.tracearr.TracearrAnalyticsSection
 import com.dnfapps.arrmatey.ui.components.tracearr.TracearrHistorySection
 import com.dnfapps.arrmatey.ui.components.tracearr.TracearrSummaryChipRow
+import com.dnfapps.arrmatey.ui.components.unifiedmedia.dialogs.ConfirmDeleteEpisodeDialog
+import com.dnfapps.arrmatey.ui.helpers.LocalFloatingBarBottomPadding
 import com.dnfapps.arrmatey.ui.helpers.LocalIsInTwoPane
 import com.dnfapps.arrmatey.ui.screens.tracearr.TracearrStreamDetailsSheet
 import com.dnfapps.arrmatey.ui.tabs.ConfirmDeleteItemSheet
@@ -78,6 +78,7 @@ private enum class EpisodeDetailsTab {
     History,
 }
 
+@OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun EpisodeDetailsScreen(
     series: ArrSeries,
@@ -112,12 +113,14 @@ fun EpisodeDetailsScreen(
                 Toast.makeText(context, status.message ?: "Updated", Toast.LENGTH_SHORT).show()
                 viewModel.resetMonitorStatus()
             }
+
             is OperationStatus.Error -> {
                 status.message?.let { message ->
                     Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                 }
                 viewModel.resetMonitorStatus()
             }
+
             else -> {}
         }
     }
@@ -127,11 +130,13 @@ fun EpisodeDetailsScreen(
             is OperationStatus.Success -> {
                 Toast.makeText(context, status.message ?: "Deleted", Toast.LENGTH_SHORT).show()
             }
+
             is OperationStatus.Error -> {
                 status.message?.let { message ->
                     Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                 }
             }
+
             else -> {}
         }
     }
@@ -291,8 +296,7 @@ fun EpisodeDetailsScreen(
 
                                 Text(
                                     text = mokoString(MR.strings.files),
-                                    fontSize = 22.sp,
-                                    fontWeight = FontWeight.Medium,
+                                    style = MaterialTheme.typography.titleLarge,
                                     modifier = Modifier.padding(horizontal = 24.dp),
                                 )
                                 currentEpisode.episodeFile?.let { file ->
@@ -326,15 +330,14 @@ fun EpisodeDetailsScreen(
                                             modifier = Modifier.fillMaxSize(),
                                             contentAlignment = Alignment.Center,
                                         ) {
-                                            CircularProgressIndicator()
+                                            androidx.compose.material3.LoadingIndicator()
                                         }
                                     }
 
                                     is HistoryState.Success -> {
                                         Text(
                                             text = mokoString(MR.strings.history),
-                                            fontSize = 22.sp,
-                                            fontWeight = FontWeight.Medium,
+                                            style = MaterialTheme.typography.titleLarge,
                                             modifier = Modifier.padding(horizontal = 24.dp),
                                         )
                                         if (historyResult.items.isEmpty()) {
@@ -382,29 +385,18 @@ fun EpisodeDetailsScreen(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(12.dp))
+                    Spacer(modifier = Modifier.height(12.dp + LocalFloatingBarBottomPadding.current))
                 }
             }
         }
 
         if (confirmDelete) {
-            AlertDialog(
-                onDismissRequest = { confirmDelete = false },
-                title = { Text(mokoString(MR.strings.are_you_sure)) },
-                text = { Text(mokoString(MR.strings.episode_delete_message)) },
-                dismissButton = {
-                    TextButton(
-                        onClick = { confirmDelete = false },
-                    ) { Text(mokoString(MR.strings.cancel)) }
+            ConfirmDeleteEpisodeDialog(
+                onConfirm = {
+                    confirmDelete = false
+                    viewModel.deleteEpisode()
                 },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            confirmDelete = false
-                            viewModel.deleteEpisode()
-                        },
-                    ) { Text(mokoString(MR.strings.yes)) }
-                },
+                onDismiss = { confirmDelete = false },
             )
         }
 

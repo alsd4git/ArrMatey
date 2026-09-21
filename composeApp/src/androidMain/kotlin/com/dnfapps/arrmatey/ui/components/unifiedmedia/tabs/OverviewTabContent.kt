@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -13,7 +12,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.dnfapps.arrmatey.arr.api.model.QualityProfile
 import com.dnfapps.arrmatey.arr.api.model.Tag
 import com.dnfapps.arrmatey.client.paging.PagedData
@@ -113,7 +111,7 @@ fun OverviewTabContent(
                                         ) {
                                             Text(
                                                 text = mokoString(MR.strings.tags),
-                                                fontSize = 14.sp,
+                                                style = MaterialTheme.typography.bodyMedium,
                                             )
                                             FlowRow(
                                                 horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -121,7 +119,7 @@ fun OverviewTabContent(
                                             ) {
                                                 state.keywords.forEach { keyword ->
                                                     Surface(
-                                                        shape = RoundedCornerShape(8.dp),
+                                                        shape = MaterialTheme.shapes.small,
                                                         color = MaterialTheme.colorScheme.secondaryContainer,
                                                     ) {
                                                         Text(

@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SwipeToDismissBox
@@ -18,10 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.dnfapps.arrmatey.arr.api.model.MediaFile
 import com.dnfapps.arrmatey.compose.utils.breakable
 import com.dnfapps.arrmatey.compose.utils.bytesAsFileSizeString
@@ -31,7 +30,7 @@ import com.dnfapps.arrmatey.utils.format
 import com.dnfapps.arrmatey.utils.mokoString
 import kotlin.time.ExperimentalTime
 
-@OptIn(ExperimentalTime::class)
+@OptIn(ExperimentalTime::class, ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun FileCard(
     file: MediaFile,
@@ -58,14 +57,14 @@ fun FileCard(
                 Icon(
                     imageVector = Icons.Default.Delete,
                     contentDescription = null,
-                    tint = Color.White,
+                    tint = MaterialTheme.colorScheme.onError,
                     modifier =
                         Modifier
                             .fillMaxSize()
                             .drawBehind {
                                 drawRoundRect(
                                     color = deleteSwipeBackground,
-                                    cornerRadius = CornerRadius(10.dp.toPx()),
+                                    cornerRadius = CornerRadius(16.dp.toPx()),
                                 )
                             }.wrapContentSize(Alignment.CenterEnd)
                             .padding(12.dp),
@@ -74,10 +73,14 @@ fun FileCard(
         },
         onDismiss = {},
     ) {
-        ContainerCard(modifier = Modifier.fillMaxWidth()) {
+        ContainerCard(
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
+            shape = MaterialTheme.shapes.large,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
             Text(
                 text = file.relativePath.breakable(),
-                fontWeight = FontWeight.SemiBold,
+                style = MaterialTheme.typography.titleSmallEmphasized,
             )
             Text(
                 text =
@@ -86,12 +89,14 @@ fun FileCard(
                         file.languages.first().name,
                         file.size.bytesAsFileSizeString(),
                     ).joinToString(BULLET),
-                fontSize = 12.sp,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             file.dateAdded?.format("MMM d, yyyy")?.let { formattedDate ->
                 Text(
                     text = mokoString(MR.strings.added_on, formattedDate),
-                    fontSize = 12.sp,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }

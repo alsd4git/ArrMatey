@@ -59,11 +59,16 @@ import com.dnfapps.arrmatey.tracearr.api.model.TracearrUserStats
 import com.dnfapps.arrmatey.tracearr.state.TracearrUserState
 import com.dnfapps.arrmatey.tracearr.viewmodel.TracearrUserViewModel
 import com.dnfapps.arrmatey.ui.components.NoInstanceView
+import com.dnfapps.arrmatey.ui.helpers.LocalFloatingBarBottomPadding
 import com.dnfapps.arrmatey.ui.screens.dashboard.CompactStatCard
 import com.dnfapps.arrmatey.ui.screens.dashboard.CountStatItem
 import com.dnfapps.arrmatey.ui.screens.tracearr.TracearrHistoryCard
 import com.dnfapps.arrmatey.ui.screens.tracearr.TracearrHistoryTable
 import com.dnfapps.arrmatey.ui.screens.tracearr.TracearrStreamDetailsSheet
+import com.dnfapps.arrmatey.ui.theme.ArrGreen
+import com.dnfapps.arrmatey.ui.theme.ArrOrange
+import com.dnfapps.arrmatey.ui.theme.ArrPurple
+import com.dnfapps.arrmatey.ui.theme.TracearrBlue
 import com.dnfapps.arrmatey.ui.theme.getTracearrServerColor
 import com.dnfapps.arrmatey.utils.formatWatchTimeMs
 import com.dnfapps.arrmatey.utils.mokoString
@@ -187,7 +192,15 @@ fun TracearrUserScreen(
                                 start = 16.dp,
                                 end = 16.dp,
                                 top = 16.dp,
-                                bottom = 16.dp + navigationBarBottomInset(),
+                                bottom =
+                                    16.dp +
+                                        if (LocalFloatingBarBottomPadding.current >
+                                            0.dp
+                                        ) {
+                                            LocalFloatingBarBottomPadding.current
+                                        } else {
+                                            navigationBarBottomInset()
+                                        },
                             ),
                         verticalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
@@ -450,7 +463,7 @@ private fun UserStatsCard(
                     icon = Icons.Default.PlayArrow,
                     count = allTime?.plays?.toInt() ?: 0,
                     label = mokoString(MR.strings.plays),
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                    iconColor = TracearrBlue,
                     modifier = Modifier.weight(1f),
                 )
 
@@ -458,7 +471,7 @@ private fun UserStatsCard(
                     icon = Icons.Default.Schedule,
                     value = formatWatchTimeMs(allTime?.watchTimeMs ?: 0),
                     label = mokoString(MR.strings.watch_time),
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                    iconColor = ArrPurple,
                     modifier = Modifier.weight(1f),
                 )
 
@@ -467,7 +480,7 @@ private fun UserStatsCard(
                         icon = Icons.Default.PlayArrow,
                         value = last30.plays.toString(),
                         label = mokoString(MR.strings.last_30_days),
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                        iconColor = ArrOrange,
                         modifier = Modifier.weight(1f),
                     )
                 }
@@ -477,7 +490,7 @@ private fun UserStatsCard(
                         icon = Icons.Default.PlayArrow,
                         value = last7.plays.toString(),
                         label = mokoString(MR.strings.last_7_days),
-                        containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                        iconColor = ArrGreen,
                         modifier = Modifier.weight(1f),
                     )
                 }

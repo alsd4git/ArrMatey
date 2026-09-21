@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.PlayArrow
@@ -40,10 +39,10 @@ import com.dnfapps.arrmatey.tracearr.api.model.TracearrTodayStats
 import com.dnfapps.arrmatey.ui.screens.dashboard.CompactStatCard
 import com.dnfapps.arrmatey.ui.screens.dashboard.CountStatItem
 import com.dnfapps.arrmatey.ui.screens.dashboard.SplitStatCard
+import com.dnfapps.arrmatey.ui.theme.ArrGreen
+import com.dnfapps.arrmatey.ui.theme.ArrOrange
+import com.dnfapps.arrmatey.ui.theme.ArrPurple
 import com.dnfapps.arrmatey.ui.theme.TracearrBlue
-import com.dnfapps.arrmatey.ui.theme.TracearrDarkBlue
-import com.dnfapps.arrmatey.ui.theme.TracearrLightBlue
-import com.dnfapps.arrmatey.ui.theme.TracearrNavy
 import com.dnfapps.arrmatey.utils.mokoString
 import dev.icerock.moko.resources.compose.painterResource
 
@@ -162,12 +161,18 @@ fun TracearrDashboardStatsSection(
             verticalArrangement = Arrangement.spacedBy(12.dp),
             maxItemsInEachRow = if (isExpanded) 4 else 2,
         ) {
+            val hasAlerts = stats.alertsLast24h > 0
             CountStatItem(
                 icon = Icons.Default.Warning,
                 count = stats.alertsLast24h,
                 label = mokoString(MR.strings.alerts),
-                containerColor = if (stats.alertsLast24h > 0) MaterialTheme.colorScheme.errorContainer else TracearrDarkBlue,
-                contentColor = if (stats.alertsLast24h > 0) MaterialTheme.colorScheme.onErrorContainer else Color.White,
+                iconColor = if (hasAlerts) MaterialTheme.colorScheme.error else ArrGreen,
+                containerColor =
+                    if (hasAlerts) {
+                        MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.25f)
+                    } else {
+                        MaterialTheme.colorScheme.surfaceContainerHigh
+                    },
                 modifier = Modifier.weight(1f),
                 onClick = onNavigateToViolations,
             )
@@ -177,8 +182,9 @@ fun TracearrDashboardStatsSection(
                 firstLabel = mokoString(MR.strings.plays),
                 secondValue = stats.todaySessions.toString(),
                 secondLabel = mokoString(MR.strings.sessions),
-                color = TracearrBlue,
-                contentColor = TracearrNavy,
+                iconColor = TracearrBlue,
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                contentColor = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1f),
                 onClick = onNavigateToHistory,
             )
@@ -186,8 +192,9 @@ fun TracearrDashboardStatsSection(
                 icon = Icons.Default.Schedule,
                 value = stats.formattedWatchTime,
                 label = mokoString(MR.strings.watch_time),
-                containerColor = TracearrLightBlue,
-                contentColor = TracearrDarkBlue,
+                iconColor = ArrPurple,
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                contentColor = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1f),
                 onClick = onNavigateToActivity,
             )
@@ -195,8 +202,9 @@ fun TracearrDashboardStatsSection(
                 icon = Icons.Default.Group,
                 count = stats.activeUsersToday,
                 label = mokoString(MR.strings.active_users),
-                containerColor = TracearrNavy,
-                contentColor = Color.White,
+                iconColor = ArrOrange,
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                contentColor = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1f),
                 onClick = onNavigateToAllUsers,
             )
@@ -214,7 +222,7 @@ private fun TracearrStatCard(
 ) {
     Surface(
         modifier = modifier,
-        shape = RoundedCornerShape(12.dp),
+        shape = MaterialTheme.shapes.medium,
         color = MaterialTheme.colorScheme.surfaceContainer,
         onClick = onClick,
     ) {
@@ -224,7 +232,7 @@ private fun TracearrStatCard(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Surface(
-                shape = RoundedCornerShape(8.dp),
+                shape = MaterialTheme.shapes.small,
                 color = TracearrBlue.copy(alpha = 0.12f),
                 modifier = Modifier.size(40.dp),
             ) {

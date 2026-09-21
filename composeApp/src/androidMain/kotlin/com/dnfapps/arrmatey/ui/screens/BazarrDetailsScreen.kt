@@ -18,11 +18,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -61,7 +61,6 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dnfapps.arrmatey.bazarr.api.model.BazarrEpisode
 import com.dnfapps.arrmatey.bazarr.api.model.BazarrMediaType
@@ -83,6 +82,7 @@ import com.dnfapps.arrmatey.ui.components.ItemDescriptionCard
 import com.dnfapps.arrmatey.ui.components.OverlayTopAppBar
 import com.dnfapps.arrmatey.ui.components.bazarr.BazarrMediaSubtitlesSheet
 import com.dnfapps.arrmatey.ui.components.bazarr.BazarrSubtitleSearchSheet
+import com.dnfapps.arrmatey.ui.helpers.LocalFloatingBarBottomPadding
 import com.dnfapps.arrmatey.ui.helpers.LocalIsInTwoPane
 import com.dnfapps.arrmatey.ui.helpers.rememberRemoteImageData
 import com.dnfapps.arrmatey.utils.AspectRatio
@@ -274,6 +274,8 @@ fun BazarrDetailsScreen(
                     }.toInfoList()
                 InfoArea(infoItems)
             }
+
+            Spacer(modifier = Modifier.height(LocalFloatingBarBottomPadding.current))
         }
 
         searchTarget?.let { target ->
@@ -360,7 +362,7 @@ private fun MissingSubtitleItem(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp),
+        shape = MaterialTheme.shapes.small,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
         onClick = onClick,
     ) {
@@ -382,9 +384,9 @@ private fun MissingSubtitleItem(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                LanguageTag(text = subtitle.name.uppercase(), containerColor = Color(0xFF4A2C5E))
+                LanguageTag(text = subtitle.name.uppercase())
 
-                IconButton(onClick = { /* TODO */ }, modifier = Modifier.size(24.dp)) {
+                IconButton(onClick = { /* TODO */ }) {
                     Icon(
                         imageVector = Icons.Default.Search,
                         contentDescription = null,
@@ -403,7 +405,7 @@ private fun SubtitleItem(
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp),
+        shape = MaterialTheme.shapes.small,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
     ) {
         Row(
@@ -427,7 +429,7 @@ private fun SubtitleItem(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 if (subtitle.isExternal) {
-                    IconButton(onClick = { onDownload(subtitle) }, modifier = Modifier.size(24.dp)) {
+                    IconButton(onClick = { onDownload(subtitle) }) {
                         Icon(
                             imageVector = Icons.Default.Download,
                             contentDescription = mokoString(MR.strings.bazarr_download_subtitle),
@@ -441,7 +443,7 @@ private fun SubtitleItem(
                         Modifier
                             .background(
                                 color = MaterialTheme.colorScheme.primaryContainer,
-                                shape = RoundedCornerShape(4.dp),
+                                shape = MaterialTheme.shapes.extraSmall,
                             ).padding(horizontal = 8.dp, vertical = 4.dp),
                 ) {
                     Text(
@@ -453,10 +455,10 @@ private fun SubtitleItem(
                                         .uppercase()
                                         .ifBlank { subtitle.name },
                                 )
-                                if (subtitle.hi) append(" HI")
+                                if (subtitle.hi) append(":HI")
                             },
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
                         style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer,
                         fontWeight = FontWeight.Bold,
                     )
                 }
@@ -559,30 +561,28 @@ private fun BazarrEpisodeItem(
             verticalArrangement = Arrangement.spacedBy(2.dp),
         ) {
             val primaryColor = MaterialTheme.colorScheme.primary
+            val missingStyle =
+                MaterialTheme.typography.bodyMedium.toSpanStyle().copy(
+                    color = MaterialTheme.colorScheme.error,
+                    fontStyle = FontStyle.Italic,
+                )
             val titleString =
                 buildAnnotatedString {
-                    withStyle(SpanStyle(fontSize = 16.sp)) {
-                        withStyle(SpanStyle(color = primaryColor)) {
-                            append("${episode.episode}. ")
-                        }
-                        withStyle(SpanStyle(fontWeight = FontWeight.Medium)) {
-                            append(episode.title)
-                        }
+                    withStyle(SpanStyle(color = primaryColor)) {
+                        append("${episode.episode}. ")
+                    }
+                    withStyle(SpanStyle(fontWeight = FontWeight.Medium)) {
+                        append(episode.title)
                     }
 
-                    withStyle(
-                        SpanStyle(
-                            color = MaterialTheme.colorScheme.error,
-                            fontStyle = FontStyle.Italic,
-                            fontSize = 14.sp,
-                        ),
-                    ) {
+                    withStyle(missingStyle) {
                         append(" ")
                         append(mokoString(MR.strings.missing))
                     }
                 }
             Text(
                 text = titleString,
+                style = MaterialTheme.typography.titleMedium,
                 lineHeight = 1.5.em,
                 overflow = TextOverflow.Ellipsis,
                 maxLines = 1,
@@ -595,7 +595,11 @@ private fun BazarrEpisodeItem(
                 itemVerticalAlignment = Alignment.CenterVertically,
             ) {
                 episode.audioLanguages.forEach { lang ->
-                    LanguageTag(text = lang.name.uppercase(), containerColor = Color(0xFF4A2C5E))
+                    LanguageTag(
+                        text = lang.name.uppercase(),
+                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                    )
                 }
 
                 episode.subtitles
@@ -624,13 +628,13 @@ private fun BazarrEpisodeItem(
 @Composable
 private fun LanguageTag(
     text: String,
-    containerColor: Color,
-    contentColor: Color = Color.White,
+    containerColor: Color = MaterialTheme.colorScheme.tertiaryContainer,
+    contentColor: Color = MaterialTheme.colorScheme.onTertiaryContainer,
 ) {
     Box(
         modifier =
             Modifier
-                .background(containerColor, RoundedCornerShape(4.dp))
+                .background(containerColor, MaterialTheme.shapes.extraSmall)
                 .padding(horizontal = 6.dp, vertical = 2.dp),
     ) {
         Text(

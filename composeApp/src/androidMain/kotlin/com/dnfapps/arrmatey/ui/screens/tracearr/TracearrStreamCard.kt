@@ -1,11 +1,14 @@
 package com.dnfapps.arrmatey.ui.screens.tracearr
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -27,7 +30,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -36,19 +38,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
-import com.dnfapps.arrmatey.extensions.pxToDp
 import com.dnfapps.arrmatey.shared.MR
 import com.dnfapps.arrmatey.tracearr.api.model.TracearrMediaType
 import com.dnfapps.arrmatey.tracearr.api.model.TracearrStreamDecision
 import com.dnfapps.arrmatey.tracearr.api.model.TracearrStreamSession
 import com.dnfapps.arrmatey.ui.helpers.rememberRemoteImageData
 import com.dnfapps.arrmatey.ui.theme.ArrOrange
-import com.dnfapps.arrmatey.ui.theme.ArrYellow
 import com.dnfapps.arrmatey.ui.theme.TracearrBlue
 import com.dnfapps.arrmatey.ui.theme.getTracearrServerColor
 import com.dnfapps.arrmatey.utils.AspectRatio
@@ -67,9 +66,9 @@ fun TracearrStreamCard(
     val isPlaying = session.state?.equals("playing", ignoreCase = true) == true
     val stateColor =
         when {
-            isPaused -> ArrYellow
-            isPlaying -> Color(0xFF4CAF50)
-            else -> Color(0xFF2196F3)
+            isPaused -> MaterialTheme.colorScheme.tertiary
+            isPlaying -> MaterialTheme.colorScheme.primary
+            else -> MaterialTheme.colorScheme.secondary
         }
 
     val edgeColor = getTracearrServerColor(session.server?.type ?: session.serverType, session.server?.name ?: session.serverName)
@@ -105,26 +104,26 @@ fun TracearrStreamCard(
             0f
         }
 
-    var cardHeight by remember { mutableIntStateOf(0) }
-
     Card(
         onClick = onClick,
-        modifier =
-            modifier.fillMaxWidth().onGloballyPositioned {
-                cardHeight = it.size.height
-            },
+        modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,
         colors =
             CardDefaults.cardColors(
                 containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
             ),
     ) {
-        Row(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(IntrinsicSize.Min),
+        ) {
             Box(
                 modifier =
                     Modifier
                         .width(6.dp)
-                        .height(cardHeight.pxToDp())
+                        .fillMaxHeight()
                         .background(edgeColor),
             )
 
@@ -144,7 +143,7 @@ fun TracearrStreamCard(
                             Modifier
                                 .width(80.dp)
                                 .aspectRatio(AspectRatio.Poster.ratio)
-                                .clip(RoundedCornerShape(8.dp))
+                                .clip(MaterialTheme.shapes.small)
                                 .background(MaterialTheme.colorScheme.surfaceContainerHighest),
                         contentAlignment = Alignment.Center,
                     ) {
@@ -223,16 +222,17 @@ fun TracearrStreamCard(
                                         session.audioDecision == TracearrStreamDecision.Transcode
 
                                 if (isTranscoding) {
+                                    val isDark = isSystemInDarkTheme()
                                     Surface(
                                         shape = CircleShape,
-                                        color = ArrYellow.copy(alpha = 0.2f),
+                                        color = Color(0xFFF59E0B).copy(alpha = if (isDark) 0.25f else 0.15f),
                                         modifier = Modifier.size(24.dp),
                                     ) {
                                         Box(contentAlignment = Alignment.Center) {
                                             Icon(
                                                 imageVector = Icons.Default.ElectricBolt,
                                                 contentDescription = mokoString(MR.strings.transcoding),
-                                                tint = ArrYellow,
+                                                tint = if (isDark) Color(0xFFFBBF24) else Color(0xFFB45309),
                                                 modifier = Modifier.size(14.dp),
                                             )
                                         }

@@ -19,7 +19,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Sort
@@ -152,7 +151,7 @@ fun NavigationSetupPage(
             Card(
                 modifier = Modifier.padding(horizontal = 24.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
-                shape = RoundedCornerShape(16.dp),
+                shape = MaterialTheme.shapes.large,
             ) {
                 Column(
                     modifier = Modifier.padding(16.dp),
@@ -179,7 +178,7 @@ fun NavigationSetupPage(
                                 modifier =
                                     Modifier
                                         .weight(1f)
-                                        .clip(RoundedCornerShape(12.dp))
+                                        .clip(MaterialTheme.shapes.medium)
                                         .clickable {
                                             if (useFloatingNavigationBar != isFloating) {
                                                 onToggleFloatingNavigationBar()
@@ -192,7 +191,7 @@ fun NavigationSetupPage(
                                                 } else {
                                                     MaterialTheme.colorScheme.outlineVariant
                                                 },
-                                            shape = RoundedCornerShape(12.dp),
+                                            shape = MaterialTheme.shapes.medium,
                                         ),
                                 color =
                                     if (isSelected) {
@@ -221,7 +220,7 @@ fun NavigationSetupPage(
             Card(
                 modifier = Modifier.padding(horizontal = 24.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
-                shape = RoundedCornerShape(16.dp),
+                shape = MaterialTheme.shapes.large,
             ) {
                 Column(
                     modifier =
@@ -447,7 +446,7 @@ fun NavigationSetupPage(
                     itemsIndexed(visibleTabs, key = { _, tab -> tab.key }) { index, tab ->
                         Surface(
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp),
+                            shape = MaterialTheme.shapes.medium,
                             color = MaterialTheme.colorScheme.surfaceContainerHigh,
                         ) {
                             Row(
@@ -533,7 +532,7 @@ fun NavigationSetupPage(
                 Button(
                     onClick = { showReorderSheet = false },
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
+                    shape = MaterialTheme.shapes.medium,
                 ) {
                     Text(mokoString(MR.strings.ok))
                 }
@@ -554,7 +553,7 @@ private fun PreferenceToggleCard(
     Card(
         modifier = modifier,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh),
-        shape = RoundedCornerShape(16.dp),
+        shape = MaterialTheme.shapes.large,
     ) {
         Row(
             modifier =

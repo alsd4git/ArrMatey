@@ -2,8 +2,9 @@ package com.dnfapps.arrmatey.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Person
@@ -81,7 +82,7 @@ private fun ReleaseDownloadButtons(
         if (includeDeleteButton) {
             IconButton(
                 onClick = { onDelete() },
-                shape = RoundedCornerShape(10.dp),
+                shape = MaterialTheme.shapes.medium,
                 colors =
                     IconButtonDefaults.iconButtonColors(
                         containerColor = MaterialTheme.colorScheme.errorContainer,
@@ -90,7 +91,10 @@ private fun ReleaseDownloadButtons(
                 enabled = !deleteInProgress,
             ) {
                 if (deleteInProgress) {
-                    CircularProgressIndicator(Modifier.size(24.dp))
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp,
+                    )
                 } else {
                     Icon(
                         imageVector = Icons.Default.Delete,
@@ -107,6 +111,7 @@ private fun ReleaseDownloadButtons(
                 imageVector = Icons.Default.Person,
                 contentDescription = mokoString(MR.strings.interactive),
             )
+            Spacer(Modifier.width(8.dp))
             Text(text = mokoString(MR.strings.interactive))
         }
 
@@ -116,14 +121,19 @@ private fun ReleaseDownloadButtons(
             enabled = automaticSearchEnabled && !automaticSearchInProgress,
         ) {
             if (automaticSearchInProgress) {
-                CircularProgressIndicator(modifier = Modifier.size(25.dp))
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    strokeWidth = 2.dp,
+                    color = MaterialTheme.colorScheme.onPrimary,
+                )
             } else {
                 Icon(
                     imageVector = Icons.Default.Search,
                     contentDescription = mokoString(MR.strings.automatic),
                 )
-                Text(text = mokoString(MR.strings.automatic))
             }
+            Spacer(Modifier.width(8.dp))
+            Text(text = mokoString(MR.strings.automatic))
         }
     }
 }

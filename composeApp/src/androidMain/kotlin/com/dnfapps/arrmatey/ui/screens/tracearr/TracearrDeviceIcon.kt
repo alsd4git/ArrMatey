@@ -2,7 +2,6 @@ package com.dnfapps.arrmatey.ui.screens.tracearr
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DesktopWindows
 import androidx.compose.material.icons.filled.PhoneIphone
@@ -42,7 +41,7 @@ fun TracearrDeviceIcon(streamSession: TracearrStreamSession) {
         }
 
     Surface(
-        shape = RoundedCornerShape(4.dp),
+        shape = MaterialTheme.shapes.extraSmall,
         color = MaterialTheme.colorScheme.surfaceContainerHighest,
         modifier = Modifier.size(24.dp),
     ) {

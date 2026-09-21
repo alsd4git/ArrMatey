@@ -3,6 +3,7 @@ package com.dnfapps.arrmatey.ui.screens.dashboard
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -29,7 +30,6 @@ import com.dnfapps.arrmatey.instances.model.InstanceType
 import com.dnfapps.arrmatey.shared.MR
 import com.dnfapps.arrmatey.ui.theme.ArrBlue
 import com.dnfapps.arrmatey.ui.theme.ArrYellow
-import com.dnfapps.arrmatey.ui.theme.surfaceLight
 import com.dnfapps.arrmatey.utils.mokoString
 import dev.icerock.moko.resources.compose.painterResource
 
@@ -65,6 +65,7 @@ fun BazarrSection(
             CardDefaults.cardColors(
                 containerColor = containerColor,
             ),
+        border = if (isEditing) BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)) else null,
     ) {
         Column(
             modifier = Modifier.padding(internalPadding),
@@ -98,16 +99,14 @@ fun BazarrSection(
                     icon = Icons.Default.Tv,
                     label = mokoString(MR.strings.bazarr_wanted_episodes),
                     count = totalEpisodes,
-                    containerColor = ArrBlue,
-                    contentColor = surfaceLight,
+                    iconColor = ArrBlue,
                 )
                 CountStatItem(
                     modifier = Modifier.weight(1f),
                     icon = Icons.Default.Movie,
                     label = mokoString(MR.strings.bazarr_wanted_movies),
                     count = totalMovies,
-                    containerColor = ArrYellow,
-                    contentColor = surfaceLight,
+                    iconColor = ArrYellow,
                 )
             }
         }

@@ -1,14 +1,16 @@
 package com.dnfapps.arrmatey.ui.tabs
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -16,12 +18,12 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
@@ -40,6 +42,7 @@ import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -52,6 +55,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontStyle
@@ -59,22 +63,24 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dnfapps.arrmatey.arr.api.model.QueueDownloadState
 import com.dnfapps.arrmatey.arr.api.model.QueueItem
 import com.dnfapps.arrmatey.arr.viewmodel.ActivityQueueViewModel
 import com.dnfapps.arrmatey.compose.utils.bytesAsFileSizeString
+import com.dnfapps.arrmatey.datastore.PreferencesStore
 import com.dnfapps.arrmatey.entensions.bullet
 import com.dnfapps.arrmatey.isDebug
 import com.dnfapps.arrmatey.model.OperationStatus
 import com.dnfapps.arrmatey.shared.MR
 import com.dnfapps.arrmatey.ui.components.LabelledSwitch
 import com.dnfapps.arrmatey.ui.components.navigation.NavigationDrawerButton
+import com.dnfapps.arrmatey.ui.helpers.LocalFloatingBarBottomPadding
 import com.dnfapps.arrmatey.ui.menu.ActivityFilterMenu
 import com.dnfapps.arrmatey.ui.theme.surfaceDark
 import com.dnfapps.arrmatey.utils.format
 import com.dnfapps.arrmatey.utils.mokoString
+import org.koin.compose.koinInject
 import org.koin.compose.viewmodel.koinViewModel
 import kotlin.time.ExperimentalTime
 
@@ -83,6 +89,7 @@ import kotlin.time.ExperimentalTime
 fun ActivityTab(
     wideRailIsVisible: Boolean,
     viewModel: ActivityQueueViewModel = koinViewModel(),
+    preferences: PreferencesStore = koinInject(),
 ) {
     val queueItems by viewModel.queueItems.collectAsStateWithLifecycle()
     val instances by viewModel.instances.collectAsStateWithLifecycle()
@@ -90,6 +97,7 @@ fun ActivityTab(
     val removeItemStatus by viewModel.removeItemState.collectAsStateWithLifecycle()
     val isLoading by viewModel.isPolling.collectAsStateWithLifecycle()
     val hasLoaded by viewModel.hasLoaded.collectAsStateWithLifecycle()
+    val useColoredCards by preferences.useColoredActivityCards.collectAsStateWithLifecycle(false)
 
     var showConfirmRemove by remember { mutableStateOf(false) }
     var selectedItem by remember { mutableStateOf<QueueItem?>(null) }
@@ -166,12 +174,15 @@ fun ActivityTab(
                                     .fillMaxSize(),
                         ) {
                             items(items = queueItems) { item ->
-                                ActivityItem(item) {
+                                ActivityItem(
+                                    item = item,
+                                    useFullColorCards = useColoredCards,
+                                ) {
                                     selectedItem = item
                                 }
                             }
                             item {
-                                Spacer(Modifier.height(0.dp))
+                                Spacer(Modifier.height(LocalFloatingBarBottomPadding.current + 16.dp))
                             }
                         }
                     }
@@ -202,70 +213,234 @@ fun ActivityTab(
 @Composable
 fun ActivityItem(
     item: QueueItem,
+    useFullColorCards: Boolean = false,
     onClick: () -> Unit,
 ) {
-    val colors =
+    val containerColor =
         when {
-            item.hasIssue ->
-                CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.errorContainer,
-                    contentColor = MaterialTheme.colorScheme.onErrorContainer,
-                )
-            else ->
-                CardDefaults.cardColors(
-                    containerColor = item.type.associatedColor,
-                    contentColor = surfaceDark,
-                )
+            item.hasIssue -> MaterialTheme.colorScheme.errorContainer
+            useFullColorCards -> item.type.associatedColor
+            else -> MaterialTheme.colorScheme.surfaceContainerHigh
+        }
+    val contentColor =
+        when {
+            item.hasIssue -> MaterialTheme.colorScheme.onErrorContainer
+            useFullColorCards -> surfaceDark
+            else -> MaterialTheme.colorScheme.onSurface
+        }
+    val secondaryContentColor =
+        when {
+            item.hasIssue -> MaterialTheme.colorScheme.onErrorContainer.copy(alpha = 0.8f)
+            useFullColorCards -> surfaceDark.copy(alpha = 0.8f)
+            else -> MaterialTheme.colorScheme.onSurfaceVariant
         }
 
     Card(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
-        colors = colors,
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth(),
+        colors =
+            CardDefaults.cardColors(
+                containerColor = containerColor,
+                contentColor = contentColor,
+            ),
+        shape = MaterialTheme.shapes.large,
     ) {
         Row(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(IntrinsicSize.Min),
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(vertical = 12.dp, horizontal = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
-            Column(
-                modifier = Modifier.weight(1f),
-            ) {
-                Text(
-                    text = item.titleLabel,
-                    fontWeight = FontWeight.Medium,
-                    overflow = TextOverflow.Ellipsis,
-                )
-
-                val statusRow =
-                    buildString {
-                        append(item.statusLabel)
-                        if (item.trackedDownloadState == QueueDownloadState.Downloading) {
-                            bullet()
-                            append(item.progressLabel)
-                            item.remainingTimeLabel?.let { remainingTimeLabel ->
-                                bullet()
-                                append(remainingTimeLabel)
-                                append(" left")
-                            }
-                        }
-                    }
-                Text(
-                    text = statusRow,
-                    fontSize = 14.sp,
-                )
-
-                Text(
-                    text = item.instanceName ?: "",
-                    fontSize = 12.sp,
+            if (!useFullColorCards) {
+                Box(
+                    modifier =
+                        Modifier
+                            .width(6.dp)
+                            .fillMaxHeight()
+                            .background(item.type.associatedColor),
                 )
             }
 
-            if (item.hasIssue) {
-                Icon(
-                    imageVector = Icons.Default.ErrorOutline,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.error,
-                )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.weight(1f).padding(vertical = 12.dp, horizontal = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(
+                            text = item.titleLabel,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold,
+                            overflow = TextOverflow.Ellipsis,
+                            color = contentColor,
+                            modifier = Modifier.weight(1f, fill = false),
+                        )
+                        if (item.hasIssue) {
+                            Icon(
+                                imageVector = Icons.Default.ErrorOutline,
+                                contentDescription = null,
+                                tint = if (useFullColorCards) surfaceDark else MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(20.dp).padding(start = 4.dp),
+                            )
+                        }
+                    }
+
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        item.instanceName?.takeIf { it.isNotBlank() }?.let { instanceName ->
+                            Surface(
+                                shape = MaterialTheme.shapes.extraSmall,
+                                color =
+                                    if (useFullColorCards) {
+                                        surfaceDark.copy(
+                                            alpha = 0.15f,
+                                        )
+                                    } else {
+                                        MaterialTheme.colorScheme.surfaceContainerHighest
+                                    },
+                            ) {
+                                Text(
+                                    text = instanceName,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = secondaryContentColor,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                )
+                            }
+                        }
+
+                        Surface(
+                            shape = MaterialTheme.shapes.extraSmall,
+                            color =
+                                if (item.hasIssue) {
+                                    MaterialTheme.colorScheme.error.copy(alpha = 0.2f)
+                                } else if (useFullColorCards) {
+                                    surfaceDark.copy(alpha = 0.15f)
+                                } else {
+                                    MaterialTheme.colorScheme.secondaryContainer
+                                },
+                        ) {
+                            Text(
+                                text = item.statusLabel,
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color =
+                                    if (item.hasIssue) {
+                                        MaterialTheme.colorScheme.error
+                                    } else if (useFullColorCards) {
+                                        surfaceDark
+                                    } else {
+                                        MaterialTheme.colorScheme.onSecondaryContainer
+                                    },
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                            )
+                        }
+
+                        Surface(
+                            shape = MaterialTheme.shapes.extraSmall,
+                            color =
+                                if (useFullColorCards) {
+                                    surfaceDark.copy(
+                                        alpha = 0.15f,
+                                    )
+                                } else {
+                                    MaterialTheme.colorScheme.surfaceContainerHighest
+                                },
+                        ) {
+                            Text(
+                                text = item.quality.qualityLabel,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = secondaryContentColor,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                            )
+                        }
+
+                        if (item.size > 0f) {
+                            Surface(
+                                shape = MaterialTheme.shapes.extraSmall,
+                                color =
+                                    if (useFullColorCards) {
+                                        surfaceDark.copy(
+                                            alpha = 0.15f,
+                                        )
+                                    } else {
+                                        MaterialTheme.colorScheme.surfaceContainerHighest
+                                    },
+                            ) {
+                                Text(
+                                    text = item.size.toLong().bytesAsFileSizeString(),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = secondaryContentColor,
+                                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                )
+                            }
+                        }
+
+                        if (item.trackedDownloadState == QueueDownloadState.Downloading) {
+                            item.remainingTimeLabel?.let { remainingTimeLabel ->
+                                Surface(
+                                    shape = MaterialTheme.shapes.extraSmall,
+                                    color =
+                                        if (useFullColorCards) {
+                                            surfaceDark.copy(
+                                                alpha = 0.15f,
+                                            )
+                                        } else {
+                                            MaterialTheme.colorScheme.tertiaryContainer
+                                        },
+                                ) {
+                                    Text(
+                                        text = "$remainingTimeLabel left",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        fontWeight = FontWeight.Medium,
+                                        color = if (useFullColorCards) surfaceDark else MaterialTheme.colorScheme.onTertiaryContainer,
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    if (item.trackedDownloadState == QueueDownloadState.Downloading && item.progressPercent > 0f) {
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            LinearProgressIndicator(
+                                progress = { item.progressPercent / 100f },
+                                modifier = Modifier.fillMaxWidth().height(6.dp),
+                                strokeCap = StrokeCap.Round,
+                                color = if (useFullColorCards) surfaceDark else MaterialTheme.colorScheme.primary,
+                                trackColor =
+                                    if (useFullColorCards) {
+                                        surfaceDark.copy(
+                                            alpha = 0.2f,
+                                        )
+                                    } else {
+                                        MaterialTheme.colorScheme.surfaceVariant
+                                    },
+                            )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.End,
+                            ) {
+                                Text(
+                                    text = item.progressLabel,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = secondaryContentColor,
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -292,13 +467,13 @@ fun QueueItemInfoSheet(
         ) {
             Text(
                 text = item.titleLabel,
-                fontSize = 22.sp,
+                style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary,
             )
             Text(
                 text = item.title ?: mokoString(MR.strings.unknown),
-                fontSize = 18.sp,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
             )
 
@@ -330,17 +505,18 @@ fun QueueItemInfoSheet(
                     ) {
                         Text(
                             text = "$remainingTime left",
-                            fontSize = 12.sp,
+                            style = MaterialTheme.typography.bodySmall,
                         )
                         Text(
                             text = item.progressLabel,
-                            fontSize = 12.sp,
+                            style = MaterialTheme.typography.bodySmall,
                         )
                     }
                     LinearProgressIndicator(
                         progress = { item.progressPercent / 100f },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier.fillMaxWidth().height(6.dp),
                         trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                        strokeCap = StrokeCap.Round,
                     )
                 }
             }
@@ -360,13 +536,13 @@ fun QueueItemInfoSheet(
                             Modifier.border(
                                 width = 1.dp,
                                 color = MaterialTheme.colorScheme.outlineVariant,
-                                shape = RoundedCornerShape(8.dp),
+                                shape = MaterialTheme.shapes.small,
                             ),
                     ) {
                         Text(
                             chipItem,
                             modifier = Modifier.padding(vertical = 2.dp, horizontal = 6.dp),
-                            fontSize = 12.sp,
+                            style = MaterialTheme.typography.labelSmall,
                         )
                     }
                 }
@@ -399,15 +575,13 @@ fun QueueItemInfoSheet(
                     ) {
                         Text(
                             text = status.title ?: "",
-                            fontSize = 14.sp,
+                            style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.SemiBold,
                         )
                         status.messages.forEach { message ->
                             Text(
                                 text = message,
-                                fontSize = 14.sp,
-                                lineHeight = 16.sp,
-                                fontStyle = FontStyle.Italic,
+                                style = MaterialTheme.typography.bodySmall.copy(fontStyle = FontStyle.Italic),
                             )
                         }
                     }
@@ -432,10 +606,17 @@ fun QueueItemInfoSheet(
                 infoItems.forEach { (key, value) ->
                     value?.let {
                         item {
-                            Text(text = mokoString(key), fontWeight = FontWeight.SemiBold)
+                            Text(
+                                text = mokoString(key),
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                            )
                         }
                         item {
-                            Text(text = value, fontSize = 14.sp)
+                            Text(
+                                text = value,
+                                style = MaterialTheme.typography.bodyMedium,
+                            )
                         }
                     }
                 }
@@ -498,8 +679,7 @@ fun EmptyActivityState(modifier: Modifier = Modifier) {
         )
         Text(
             text = mokoString(MR.strings.no_activity),
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Medium,
+            style = MaterialTheme.typography.titleMedium,
         )
     }
 }

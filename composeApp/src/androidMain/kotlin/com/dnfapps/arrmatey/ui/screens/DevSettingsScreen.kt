@@ -22,6 +22,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -38,6 +39,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
@@ -48,6 +50,7 @@ import com.dnfapps.arrmatey.datastore.PreferencesStore
 import com.dnfapps.arrmatey.instances.model.InstanceType
 import com.dnfapps.arrmatey.logging.LogReader
 import com.dnfapps.arrmatey.shared.MR
+import com.dnfapps.arrmatey.ui.components.ContainerCard
 import com.dnfapps.arrmatey.ui.components.DropdownPicker
 import com.dnfapps.arrmatey.utils.mokoString
 import kotlinx.coroutines.Dispatchers
@@ -115,7 +118,7 @@ fun DevSettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Developer Settings") },
+                title = { Text(mokoString(MR.strings.developer_settings)) },
                 navigationIcon = {
                     IconButton(
                         onClick = onBack,
@@ -131,60 +134,66 @@ fun DevSettingsScreen(
     ) { pv ->
         Box(modifier = Modifier.padding(pv)) {
             Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
                 modifier =
                     Modifier
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
-                        .padding(12.dp),
+                        .padding(16.dp),
             ) {
-                InstanceType.entries.forEach { instanceType ->
-                    Row(
-                        modifier =
-                            Modifier
-                                .fillMaxWidth()
-                                .toggleable(
-                                    value = showInfoCardMap[instanceType] ?: true,
-                                    onValueChange = { preferenceStore.setInfoCardVisibility(instanceType, it) },
-                                ),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            text = "Show ${instanceType.name} info card",
-                        )
-                        Switch(
-                            checked = showInfoCardMap[instanceType] ?: true,
-                            onCheckedChange = null,
-                        )
-                    }
-                }
+                ContainerCard {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        InstanceType.entries.forEach { instanceType ->
+                            Row(
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .toggleable(
+                                            value = showInfoCardMap[instanceType] ?: true,
+                                            onValueChange = { preferenceStore.setInfoCardVisibility(instanceType, it) },
+                                        ),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(
+                                    text = mokoString(MR.strings.show_instance_info_card, instanceType.name),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                )
+                                Switch(
+                                    checked = showInfoCardMap[instanceType] ?: true,
+                                    onCheckedChange = null,
+                                )
+                            }
+                        }
 
-                Row(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .toggleable(
-                                value = activityPollingOn,
-                                onValueChange = { preferenceStore.toggleActivityPolling() },
-                            ),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = "Enable activity polling",
-                    )
-                    Switch(
-                        checked = activityPollingOn,
-                        onCheckedChange = null,
-                    )
+                        Row(
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .toggleable(
+                                        value = activityPollingOn,
+                                        onValueChange = { preferenceStore.toggleActivityPolling() },
+                                    ),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = mokoString(MR.strings.enable_activity_polling),
+                                style = MaterialTheme.typography.bodyLarge,
+                            )
+                            Switch(
+                                checked = activityPollingOn,
+                                onCheckedChange = null,
+                            )
+                        }
+                    }
                 }
 
                 DropdownPicker(
                     options = LoggerLevel.entries,
                     selectedOption = logLevel,
                     onOptionSelected = { preferenceStore.setLogLevel(it) },
-                    label = { Text("HTTP Logging Level") },
+                    label = { Text(mokoString(MR.strings.http_logging_level)) },
                     modifier = Modifier.fillMaxWidth(),
                 )
 
@@ -206,7 +215,8 @@ fun DevSettingsScreen(
                         Modifier
                             .height(250.dp)
                             .fillMaxWidth()
-                            .background(MaterialTheme.colorScheme.primaryContainer),
+                            .clip(MaterialTheme.shapes.large)
+                            .background(MaterialTheme.colorScheme.surfaceContainerHighest),
                 ) {
                     SelectionContainer {
                         Column(
@@ -224,13 +234,19 @@ fun DevSettingsScreen(
                                         fontFamily = FontFamily.Monospace,
                                     ),
                                 modifier = Modifier.fillMaxWidth(),
-                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                color = MaterialTheme.colorScheme.onSurface,
                             )
                         }
                     }
                 }
-                Button(onClick = { shareLogs(context) }) {
-                    Text("Share logs")
+
+                Button(
+                    onClick = { shareLogs(context) },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Icon(Icons.Default.Share, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text(mokoString(MR.strings.share_logs))
                 }
             }
         }

@@ -10,7 +10,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.dnfapps.arrmatey.seerr.api.model.MediaRequest
@@ -25,8 +27,6 @@ import com.dnfapps.arrmatey.ui.components.BannerView
 import com.dnfapps.arrmatey.ui.components.MediaRequestTypeChip
 import com.dnfapps.arrmatey.ui.helpers.rememberRemoteImageData
 import com.dnfapps.arrmatey.ui.theme.TranslucentBlack
-import com.dnfapps.arrmatey.ui.theme.inverseOnSurfaceLight
-import com.dnfapps.arrmatey.ui.theme.inverseSurfaceLight
 import com.dnfapps.arrmatey.utils.AspectRatio
 import com.dnfapps.arrmatey.utils.format
 import com.dnfapps.arrmatey.utils.mokoString
@@ -52,11 +52,10 @@ fun RequestCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.large,
-        elevation = CardDefaults.cardElevation(defaultElevation = 12.dp),
         colors =
             CardDefaults.cardColors(
-                containerColor = inverseSurfaceLight,
-                contentColor = inverseOnSurfaceLight,
+                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                contentColor = Color.White,
             ),
         onClick = onClick,
     ) {
@@ -68,8 +67,8 @@ fun RequestCard(
             Box(modifier = Modifier.matchParentSize().background(TranslucentBlack))
 
             Column(
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier.padding(18.dp).fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.padding(16.dp).fillMaxWidth(),
             ) {
                 RequestCardHeader(
                     posterUrl = details?.fullPosterPath,
@@ -82,8 +81,6 @@ fun RequestCard(
                 if (request.type == RequestType.Tv && request.seasons.isNotEmpty()) {
                     RequestCardSeasonInfo(seasons = request.seasons)
                 }
-
-                Spacer(Modifier.height(12.dp))
 
                 RequestButtons(
                     isAdmin = user?.hasPermission(UserPermission.ADMIN) == true,
@@ -111,7 +108,7 @@ private fun RequestCardHeader(
     request: MediaRequest,
 ) {
     Row(
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalAlignment = Alignment.Top,
     ) {
         AsyncImage(
@@ -119,62 +116,77 @@ private fun RequestCardHeader(
             contentDescription = null,
             modifier =
                 Modifier
-                    .height(100.dp)
+                    .height(110.dp)
                     .aspectRatio(AspectRatio.Poster.ratio, true)
-                    .clip(RoundedCornerShape(12.dp)),
+                    .clip(MaterialTheme.shapes.medium),
             contentScale = ContentScale.Fit,
         )
 
-        Column(modifier = Modifier.defaultMinSize(minHeight = 100.dp)) {
+        Column(
+            modifier = Modifier.weight(1f).defaultMinSize(minHeight = 110.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
             Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Text(
-                    text = year,
-                    style = MaterialTheme.typography.labelMedium,
-                )
-                MediaRequestTypeChip(text = requestType.name, requestType)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    if (year.isNotBlank()) {
+                        Text(
+                            text = year,
+                            style = MaterialTheme.typography.labelMedium,
+                            color = Color.White.copy(alpha = 0.8f),
+                        )
+                    }
+                    MediaRequestTypeChip(text = requestType.name, requestType)
+                }
+                StatusChip(request)
             }
+
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleLargeEmphasized,
-                modifier = Modifier.padding(top = 2.dp),
+                color = Color.White,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
             )
-            Row(
-                verticalAlignment = Alignment.Top,
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                StatusChip(request)
-                RequestMetadata(request)
-            }
+
+            RequestMetadata(request)
         }
     }
 }
 
 @Composable
 private fun RequestMetadata(request: MediaRequest) {
-    Column {
+    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
         UserInfoRow(
             label = mokoString(MR.strings.requested_by),
             displayName = request.requestedBy.displayName,
             avatar = request.requestedBy.avatar,
+            textColor = Color.White.copy(alpha = 0.9f),
         )
         Text(
             text = request.createdAt.format("HH:mm, MMM d, yyyy"),
             style = MaterialTheme.typography.bodySmall,
+            color = Color.White.copy(alpha = 0.7f),
         )
 
         request.modifiedBy?.let { modifiedBy ->
-            Spacer(Modifier.height(6.dp))
+            Spacer(Modifier.height(4.dp))
             UserInfoRow(
                 label = mokoString(MR.strings.modified_by),
                 displayName = modifiedBy.displayName,
                 avatar = modifiedBy.avatar,
+                textColor = Color.White.copy(alpha = 0.9f),
             )
             Text(
                 text = request.updatedAt.format("HH:mm, MMM d, yyyy"),
                 style = MaterialTheme.typography.bodySmall,
+                color = Color.White.copy(alpha = 0.7f),
             )
         }
     }
@@ -185,17 +197,25 @@ private fun RequestCardSeasonInfo(seasons: List<RequestSeason>) {
     Text(
         text = mokoString(MR.strings.seasons_header),
         style = MaterialTheme.typography.labelSmall,
+        color = Color.White.copy(alpha = 0.8f),
     )
     FlowRow(
-        horizontalArrangement = Arrangement.spacedBy(2.dp),
-        verticalArrangement = Arrangement.spacedBy(2.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
         modifier = Modifier.padding(top = 2.dp),
     ) {
         seasons.forEach {
-            Badge(
-                containerColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                contentColor = MaterialTheme.colorScheme.surfaceVariant,
-            ) { Text(it.seasonNumber.toString()) }
+            Surface(
+                shape = RoundedCornerShape(percent = 50),
+                color = MaterialTheme.colorScheme.primaryContainer,
+            ) {
+                Text(
+                    text = it.seasonNumber.toString(),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                )
+            }
         }
     }
 }

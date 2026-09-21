@@ -8,24 +8,31 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.BookmarkBorder
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -37,14 +44,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import com.dnfapps.arrmatey.arr.api.model.ArrMedia
@@ -55,13 +62,14 @@ import com.dnfapps.arrmatey.arr.api.model.Audiobook
 import com.dnfapps.arrmatey.arr.api.model.Author
 import com.dnfapps.arrmatey.arr.api.model.MediaStatus
 import com.dnfapps.arrmatey.arr.api.model.MockMedia
+import com.dnfapps.arrmatey.arr.api.model.QualityProfile
 import com.dnfapps.arrmatey.arr.api.model.SearchAudiobook
+import com.dnfapps.arrmatey.arr.api.model.Tag
 import com.dnfapps.arrmatey.compose.utils.bytesAsFileSizeString
 import com.dnfapps.arrmatey.discover.model.SearchResult
 import com.dnfapps.arrmatey.entensions.BULLET
 import com.dnfapps.arrmatey.entensions.rememberHtml
 import com.dnfapps.arrmatey.entensions.unlessEmpty
-import com.dnfapps.arrmatey.extensions.pxToDp
 import com.dnfapps.arrmatey.shared.MR
 import com.dnfapps.arrmatey.ui.helpers.LocalFloatingBarBottomPadding
 import com.dnfapps.arrmatey.ui.helpers.rememberRemoteImageData
@@ -90,18 +98,20 @@ fun <T : ArrMedia> MediaList(
     posterElevation: PosterElevation = PosterElevation.Medium,
     posterRadius: PosterRadius = PosterRadius.Medium,
     multiSelectState: MultiSelectState<Long> = MultiSelectState(selectionModeAvailable = false),
+    qualityProfiles: List<QualityProfile> = emptyList(),
+    tags: List<Tag> = emptyList(),
 ) {
     val bottomPadding = LocalFloatingBarBottomPadding.current
 
     LazyColumn(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(18.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
         userScrollEnabled = userScrollEnabled,
         contentPadding =
             PaddingValues(
-                start = 18.dp,
+                start = 12.dp,
                 top = 12.dp,
-                end = 18.dp,
+                end = 12.dp,
                 bottom = 12.dp + bottomPadding,
             ),
     ) {
@@ -121,6 +131,8 @@ fun <T : ArrMedia> MediaList(
                 posterElevation = posterElevation,
                 posterRadius = posterRadius,
                 multiSelectState = multiSelectState,
+                qualityProfiles = qualityProfiles,
+                tags = tags,
             )
         }
     }
@@ -150,11 +162,18 @@ fun SearchResultList(
         }
     }
 
+    val bottomPadding = LocalFloatingBarBottomPadding.current
     LazyColumn(
         state = lazyListState,
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(18.dp),
-        contentPadding = PaddingValues(vertical = 12.dp, horizontal = 18.dp),
+        contentPadding =
+            PaddingValues(
+                top = 12.dp,
+                bottom = bottomPadding + 16.dp,
+                start = 18.dp,
+                end = 18.dp,
+            ),
     ) {
         items(items, key = { it.id }) { item ->
             SearchResultItem(
@@ -229,6 +248,8 @@ fun <T : ArrMedia> MediaItem(
     posterRadius: PosterRadius = PosterRadius.Medium,
     multiSelectState: MultiSelectState<Long> = MultiSelectState(selectionModeAvailable = false),
     edgeColor: Color? = null,
+    qualityProfiles: List<QualityProfile> = emptyList(),
+    tags: List<Tag> = emptyList(),
 ) {
     val isSelected = multiSelectState.isSelected(item.guid)
     val isInSelectionMode by multiSelectState.isInSelectionMode.collectAsStateWithLifecycle()
@@ -259,87 +280,125 @@ fun <T : ArrMedia> MediaItem(
                         }
                     },
                 ),
-        shape = RoundedCornerShape(posterRadius.radius),
+        shape = MaterialTheme.shapes.medium,
         elevation = CardDefaults.cardElevation(defaultElevation = posterElevation.elevation),
-        border = if (isSelected) BorderStroke(2.dp, MaterialTheme.colorScheme.primary) else null,
+        border =
+            if (isSelected) {
+                BorderStroke(2.dp, MaterialTheme.colorScheme.primary)
+            } else {
+                BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+            },
+        colors =
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+            ),
     ) {
-        Row(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
+        ) {
             if (edgeColor != null) {
                 Box(
                     modifier =
                         Modifier
                             .width(6.dp)
-                            .height(contentHeight.pxToDp() + 24.dp)
+                            .fillMaxHeight()
                             .background(edgeColor),
                 )
             }
 
             Box(
-                modifier =
-                    Modifier
-                        .weight(1f)
-                        .heightIn(max = 200.dp),
+                modifier = Modifier.weight(1f).fillMaxHeight(),
             ) {
                 if (hasBanner) {
                     BannerView(
                         bannerModel = bannerModel ?: item.getBanner()?.remoteUrl?.let { rememberRemoteImageData(it) },
                         blur = blur,
-                        modifier = Modifier.height(contentHeight.pxToDp() + 24.dp),
+                        modifier = Modifier.matchParentSize(),
                     )
                 }
 
                 Row(
-                    modifier =
-                        Modifier
-                            .wrapContentHeight()
-                            .padding(12.dp)
-                            .onGloballyPositioned {
-                                contentHeight = it.size.height
-                            },
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.fillMaxWidth().padding(10.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     PosterItem(
                         item = item,
                         aspectRatio = aspectRatio,
-                        modifier = Modifier.width(100.dp),
+                        modifier = Modifier.width(76.dp),
                         posterModel = posterModel,
                         elevation = posterElevation,
                         radius = posterRadius,
                         multiSelectState = multiSelectState,
+                        additionalContent = {
+                            Surface(
+                                shape = CircleShape,
+                                color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
+                                border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+                                shadowElevation = 2.dp,
+                                modifier =
+                                    Modifier
+                                        .align(Alignment.TopStart)
+                                        .padding(4.dp),
+                            ) {
+                                Box(
+                                    modifier = Modifier.padding(3.dp),
+                                    contentAlignment = Alignment.Center,
+                                ) {
+                                    Icon(
+                                        imageVector =
+                                            if (item.monitored) {
+                                                Icons.Default.Bookmark
+                                            } else {
+                                                Icons.Default.BookmarkBorder
+                                            },
+                                        contentDescription =
+                                            mokoString(
+                                                if (item.monitored) MR.strings.monitored else MR.strings.unmonitored,
+                                            ),
+                                        tint =
+                                            if (item.monitored) {
+                                                MaterialTheme.colorScheme.primary
+                                            } else {
+                                                MaterialTheme.colorScheme.onSurfaceVariant
+                                            },
+                                        modifier = Modifier.size(12.dp),
+                                    )
+                                }
+                            }
+                        },
                     )
 
                     Column(
-                        modifier = Modifier.weight(1f).wrapContentHeight(),
-                        verticalArrangement = Arrangement.Top,
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
                         val titleColor = if (hasBanner) Color.White else MaterialTheme.colorScheme.onSurface
                         Text(
                             text = item.title ?: mokoString(MR.strings.unknown),
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Bold,
                             color = titleColor,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                         )
-                        MediaDetails(item, isActive, hasBanner)
+
+                        MediaDetails(
+                            item = item,
+                            isActive = isActive,
+                            showBannerBackground = hasBanner,
+                            qualityProfiles = qualityProfiles,
+                            tags = tags,
+                        )
 
                         if (includeOverview && item.overview != null) {
                             val parsed = item.overview?.rememberHtml() ?: ""
                             Text(
                                 text = parsed,
                                 style = MaterialTheme.typography.bodySmall,
-                                color =
-                                    if (hasBanner) {
-                                        Color.White.copy(
-                                            alpha = 0.8f,
-                                        )
-                                    } else {
-                                        MaterialTheme.colorScheme.onSurfaceVariant
-                                    },
-                                maxLines = 6,
-                                minLines = 3,
+                                color = if (hasBanner) Color.White.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 4,
                                 overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.padding(top = 8.dp),
                             )
                         }
                     }
@@ -360,67 +419,67 @@ fun SeerrMediaItem(
     bannerModel: Any? = null,
     edgeColor: Color? = null,
 ) {
-    var contentHeight by remember { mutableIntStateOf(0) }
-
     val item = result.result
+    val hasBanner =
+        remember(showBannerBackground, bannerModel, item) {
+            showBannerBackground && (bannerModel != null || item.fullBackdropPath != null)
+        }
+
     Card(
         modifier =
             modifier
                 .fillMaxWidth()
                 .combinedClickable(onClick = { onItemClick(result) }),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 10.dp),
+        shape = MaterialTheme.shapes.medium,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+        colors =
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+            ),
     ) {
-        Row(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
+        ) {
             if (edgeColor != null) {
                 Box(
                     modifier =
                         Modifier
                             .width(6.dp)
-                            .height(contentHeight.pxToDp() + 24.dp)
+                            .fillMaxHeight()
                             .background(edgeColor),
                 )
             }
 
             Box(
-                modifier =
-                    Modifier
-                        .weight(1f)
-                        .heightIn(max = 200.dp),
+                modifier = Modifier.weight(1f).fillMaxHeight(),
             ) {
-                if (showBannerBackground && (bannerModel != null || item.fullBackdropPath != null)) {
+                if (hasBanner) {
                     BannerView(
                         bannerModel = bannerModel ?: item.fullBackdropPath?.let { rememberRemoteImageData(it) },
                         blur = Blur.Normal,
-                        modifier = Modifier.height(contentHeight.pxToDp() + 24.dp),
+                        modifier = Modifier.matchParentSize(),
                     )
                 }
 
                 Row(
-                    modifier =
-                        Modifier
-                            .fillMaxSize()
-                            .padding(12.dp)
-                            .onGloballyPositioned {
-                                contentHeight = it.size.height
-                            },
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.fillMaxWidth().padding(10.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     PosterItem(
                         item = item,
-                        modifier = Modifier.width(100.dp),
+                        modifier = Modifier.width(76.dp),
                     )
 
                     Column(
-                        modifier = Modifier.weight(1f).wrapContentHeight(),
-                        verticalArrangement = Arrangement.Center,
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
-                        val titleColor =
-                            if (showBannerBackground) Color.White else MaterialTheme.colorScheme.onSurface
+                        val titleColor = if (hasBanner) Color.White else MaterialTheme.colorScheme.onSurface
                         Text(
                             text = item.title ?: item.name ?: mokoString(MR.strings.unknown),
-                            style = MaterialTheme.typography.titleMedium,
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Bold,
                             color = titleColor,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
@@ -432,31 +491,16 @@ fun SeerrMediaItem(
                         Text(
                             text = secondLine,
                             style = MaterialTheme.typography.bodyMedium,
-                            color =
-                                if (showBannerBackground) {
-                                    Color.White.copy(
-                                        alpha = 0.8f,
-                                    )
-                                } else {
-                                    MaterialTheme.colorScheme.onSurfaceVariant
-                                },
+                            color = if (hasBanner) Color.White.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant,
                         )
 
                         if (includeOverview && item.overview != null) {
                             Text(
                                 text = item.overview ?: "",
                                 style = MaterialTheme.typography.bodySmall,
-                                color =
-                                    if (showBannerBackground) {
-                                        Color.White.copy(
-                                            alpha = 0.8f,
-                                        )
-                                    } else {
-                                        MaterialTheme.colorScheme.onSurfaceVariant
-                                    },
-                                maxLines = 2,
+                                color = if (hasBanner) Color.White.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 4,
                                 overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.padding(top = 8.dp),
                             )
                         }
                     }
@@ -474,7 +518,6 @@ fun SeerrPersonItem(
     includeOverview: Boolean = true,
     edgeColor: Color? = null,
 ) {
-    var contentHeight by remember { mutableIntStateOf(0) }
     val item = result.result
     Card(
         modifier =
@@ -482,16 +525,17 @@ fun SeerrPersonItem(
                 .fillMaxWidth()
                 .wrapContentHeight()
                 .combinedClickable(onClick = { onItemClick(result) }),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 10.dp),
+        shape = MaterialTheme.shapes.large,
     ) {
-        Row(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
+        ) {
             if (edgeColor != null) {
                 Box(
                     modifier =
                         Modifier
                             .width(6.dp)
-                            .height(contentHeight.pxToDp() + 24.dp)
+                            .fillMaxHeight()
                             .background(edgeColor),
                 )
             }
@@ -504,10 +548,7 @@ fun SeerrPersonItem(
                         .weight(1f)
                         .padding(12.dp)
                         .fillMaxWidth()
-                        .wrapContentHeight()
-                        .onGloballyPositioned {
-                            contentHeight = it.size.height
-                        },
+                        .wrapContentHeight(),
             ) {
                 PersonProfileImage(item.fullPosterPath)
 
@@ -520,7 +561,7 @@ fun SeerrPersonItem(
                 ) {
                     Text(
                         text = item.name ?: mokoString(MR.strings.unknown),
-                        fontSize = 18.sp,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
@@ -548,13 +589,15 @@ private fun MediaDetails(
     item: ArrMedia,
     isActive: Boolean,
     showBannerBackground: Boolean,
+    qualityProfiles: List<QualityProfile> = emptyList(),
+    tags: List<Tag> = emptyList(),
 ) {
     Column {
         when (item) {
-            is ArrSeries -> SeriesDetails(item, isActive, showBannerBackground)
-            is ArrMovie -> MovieDetails(item, isActive, showBannerBackground)
-            is Arrtist -> ArtistDetails(item, isActive, showBannerBackground)
-            is Author -> AuthorDetails(item, isActive, showBannerBackground)
+            is ArrSeries -> SeriesDetails(item, isActive, showBannerBackground, qualityProfiles, tags)
+            is ArrMovie -> MovieDetails(item, isActive, showBannerBackground, qualityProfiles, tags)
+            is Arrtist -> ArtistDetails(item, isActive, showBannerBackground, qualityProfiles, tags)
+            is Author -> AuthorDetails(item, isActive, showBannerBackground, qualityProfiles, tags)
             is Audiobook -> AudiobookDetails(item, isActive, showBannerBackground)
             is SearchAudiobook -> SearchAudiobookDetails(item, showBannerBackground)
             is MockMedia -> MockDetails(item, showBannerBackground)
@@ -567,31 +610,42 @@ private fun SeriesDetails(
     item: ArrSeries,
     isActive: Boolean,
     showBannerBackground: Boolean,
+    qualityProfiles: List<QualityProfile> = emptyList(),
+    tags: List<Tag> = emptyList(),
 ) {
     val contentColor = if (showBannerBackground) Color.White else MaterialTheme.colorScheme.onSurface
+    val secondaryContentColor = if (showBannerBackground) Color.White.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant
     val seasonLabel = mokoPlural(MR.plurals.seasons, item.seasonCount)
     val fileSizeString = item.fileSize?.bytesAsFileSizeString()?.takeUnless { item.id == null }
     val network = item.network
 
     val secondLine = listOfNotNull(seasonLabel, fileSizeString, network).joinToString(BULLET)
-    Text(secondLine, color = contentColor, fontSize = 14.sp, lineHeight = 18.sp)
+    Text(secondLine, color = contentColor, style = MaterialTheme.typography.bodyMedium)
 
+    val nextAirStr = item.nextAiring?.format()
     val statusStr =
         when (item.status) {
             MediaStatus.Continuing ->
-                item.nextAiring?.format()
+                nextAirStr
                     ?: "${mokoString(item.status.resource)} - ${mokoString(MR.strings.unknown)}"
 
-            else -> mokoString(item.status.resource)
+            else -> listOfNotNull(mokoString(item.status.resource), nextAirStr).joinToString(BULLET)
         }
-    Text(statusStr, color = contentColor, fontSize = 14.sp, lineHeight = 18.sp)
+    Text(statusStr, color = contentColor, style = MaterialTheme.typography.bodyMedium)
+
+    val qualityProfile = qualityProfiles.firstOrNull { it.id == item.qualityProfileId }?.name ?: item.profileName
+    val tagsLabel = item.formatTags(tags)
+    val metaLine = listOfNotNull(qualityProfile, tagsLabel).joinToString(BULLET)
+    if (metaLine.isNotEmpty()) {
+        Text(metaLine, color = secondaryContentColor, style = MaterialTheme.typography.bodySmall)
+    }
 
     if (item.id != null) {
         Text(
             text = "${item.episodeFileCount}/${item.episodeCount}",
-            fontSize = 12.sp,
+            style = MaterialTheme.typography.labelSmall,
             color = contentColor,
-            modifier = Modifier.padding(top = 8.dp, bottom = 1.dp),
+            modifier = Modifier.padding(top = 8.dp, bottom = 2.dp),
         )
         LinearProgressIndicator(
             progress = { item.statusProgress },
@@ -599,8 +653,9 @@ private fun SeriesDetails(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .height(6.dp),
-            trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                    .height(4.dp)
+                    .clip(CircleShape),
+            trackColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
         )
     }
 }
@@ -610,15 +665,25 @@ private fun MovieDetails(
     item: ArrMovie,
     isActive: Boolean,
     showBannerBackground: Boolean,
+    qualityProfiles: List<QualityProfile> = emptyList(),
+    tags: List<Tag> = emptyList(),
 ) {
     val contentColor = if (showBannerBackground) Color.White else MaterialTheme.colorScheme.onSurface
-    item.releaseDate?.format("MMMM d, yyyy")?.let {
-        Text(it, color = contentColor, fontSize = 14.sp, lineHeight = 18.sp)
+    val secondaryContentColor = if (showBannerBackground) Color.White.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant
+
+    val nextReleaseDate =
+        item.digitalRelease?.format("MMM d, yyyy")?.let { "${mokoString(MR.strings.digital_release)}: $it" }
+            ?: item.physicalRelease?.format("MMM d, yyyy")?.let { "${mokoString(MR.strings.physical_release)}: $it" }
+            ?: item.inCinemas?.format("MMM d, yyyy")?.let { "${mokoString(MR.strings.in_cinemas)}: $it" }
+            ?: item.releaseDate?.format("MMMM d, yyyy")
+
+    nextReleaseDate?.let {
+        Text(it, color = contentColor, style = MaterialTheme.typography.bodyMedium)
     }
 
     val firstLine = listOfNotNull(item.runtimeString, item.studio).joinToString(" • ")
     firstLine.unlessEmpty { firstLine ->
-        Text(firstLine, color = contentColor, fontSize = 14.sp, lineHeight = 18.sp)
+        Text(firstLine, color = contentColor, style = MaterialTheme.typography.bodyMedium)
     }
 
     val qualityLabel =
@@ -629,7 +694,14 @@ private fun MovieDetails(
     val fileSizeLabel = item.fileSize?.bytesAsFileSizeString()?.takeUnless { item.id == null }
     val thirdLine = listOfNotNull(qualityLabel, fileSizeLabel).joinToString(BULLET)
     thirdLine.unlessEmpty { thirdLine ->
-        Text(thirdLine, color = contentColor, fontSize = 14.sp, lineHeight = 18.sp)
+        Text(thirdLine, color = contentColor, style = MaterialTheme.typography.bodyMedium)
+    }
+
+    val qualityProfile = qualityProfiles.firstOrNull { it.id == item.qualityProfileId }?.name
+    val tagsLabel = item.formatTags(tags)
+    val metaLine = listOfNotNull(qualityProfile, tagsLabel).joinToString(BULLET)
+    if (metaLine.isNotEmpty()) {
+        Text(metaLine, color = secondaryContentColor, style = MaterialTheme.typography.bodySmall)
     }
 
     if (item.id != null) {
@@ -640,8 +712,9 @@ private fun MovieDetails(
                 Modifier
                     .padding(top = 8.dp)
                     .fillMaxWidth()
-                    .height(6.dp),
-            trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                    .height(4.dp)
+                    .clip(CircleShape),
+            trackColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
         )
     }
 }
@@ -651,15 +724,31 @@ private fun ArtistDetails(
     item: Arrtist,
     isActive: Boolean,
     showBannerBackground: Boolean,
+    qualityProfiles: List<QualityProfile> = emptyList(),
+    tags: List<Tag> = emptyList(),
 ) {
     val contentColor = if (showBannerBackground) Color.White else MaterialTheme.colorScheme.onSurface
+    val secondaryContentColor = if (showBannerBackground) Color.White.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant
     val albumLabel = mokoPlural(MR.plurals.albums, item.albumCount)
     val trackLabel = mokoPlural(MR.plurals.tracks, item.trackCount)
     val secondLine = listOfNotNull(albumLabel, trackLabel).joinToString(BULLET)
-    Text(secondLine, color = contentColor, fontSize = 14.sp, lineHeight = 18.sp)
+    Text(secondLine, color = contentColor, style = MaterialTheme.typography.bodyMedium)
 
-    val statusStr = mokoString(item.status.resource)
-    Text(statusStr, color = contentColor, fontSize = 14.sp, lineHeight = 18.sp)
+    val nextRelease = item.nextAlbum?.releaseDate?.format()
+    val statusStr =
+        if (nextRelease != null) {
+            "${mokoString(item.status.resource)} • $nextRelease"
+        } else {
+            mokoString(item.status.resource)
+        }
+    Text(statusStr, color = contentColor, style = MaterialTheme.typography.bodyMedium)
+
+    val qualityProfile = qualityProfiles.firstOrNull { it.id == item.qualityProfileId }?.name
+    val tagsLabel = item.formatTags(tags)
+    val metaLine = listOfNotNull(qualityProfile, tagsLabel).joinToString(BULLET)
+    if (metaLine.isNotEmpty()) {
+        Text(metaLine, color = secondaryContentColor, style = MaterialTheme.typography.bodySmall)
+    }
 }
 
 @Composable
@@ -667,29 +756,40 @@ private fun AuthorDetails(
     item: Author,
     isActive: Boolean,
     showBannerBackground: Boolean,
+    qualityProfiles: List<QualityProfile> = emptyList(),
+    tags: List<Tag> = emptyList(),
 ) {
     val contentColor = if (showBannerBackground) Color.White else MaterialTheme.colorScheme.onSurface
+    val secondaryContentColor = if (showBannerBackground) Color.White.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant
 
     val bookLabel = mokoPlural(MR.plurals.books_count, item.bookCount)
     val firstLine = listOfNotNull(bookLabel).joinToString(BULLET)
-    Text(firstLine, color = contentColor, fontSize = 14.sp, lineHeight = 18.sp)
+    Text(firstLine, color = contentColor, style = MaterialTheme.typography.bodyMedium)
 
+    val nextRelease = item.nextBook?.releaseDate?.format()
     val statusStr =
         when (item.status) {
             MediaStatus.Continuing ->
-                item.nextBook?.releaseDate?.format()
+                nextRelease
                     ?: "${mokoString(item.status.resource)} - ${mokoString(MR.strings.unknown)}"
 
-            else -> mokoString(item.status.resource)
+            else -> listOfNotNull(mokoString(item.status.resource), nextRelease).joinToString(BULLET)
         }
-    Text(statusStr, color = contentColor, fontSize = 14.sp, lineHeight = 18.sp)
+    Text(statusStr, color = contentColor, style = MaterialTheme.typography.bodyMedium)
+
+    val qualityProfile = qualityProfiles.firstOrNull { it.id == item.qualityProfileId }?.name
+    val tagsLabel = item.formatTags(tags)
+    val metaLine = listOfNotNull(qualityProfile, tagsLabel).joinToString(BULLET)
+    if (metaLine.isNotEmpty()) {
+        Text(metaLine, color = secondaryContentColor, style = MaterialTheme.typography.bodySmall)
+    }
 
     if (item.id != null) {
         Text(
             text = "${item.bookFileCount}/${item.bookCount}",
-            fontSize = 12.sp,
+            style = MaterialTheme.typography.labelSmall,
             color = contentColor,
-            modifier = Modifier.padding(top = 8.dp, bottom = 1.dp),
+            modifier = Modifier.padding(top = 8.dp, bottom = 2.dp),
         )
         LinearProgressIndicator(
             progress = { item.statusProgress },
@@ -697,8 +797,9 @@ private fun AuthorDetails(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .height(6.dp),
-            trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                    .height(4.dp)
+                    .clip(CircleShape),
+            trackColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
         )
     }
 }
@@ -713,7 +814,7 @@ private fun AudiobookDetails(
         if (showBannerBackground) Color.White else MaterialTheme.colorScheme.onSurface
 
     val authorString = item.authors.joinToString(", ")
-    Text(authorString, color = contentColor, fontSize = 14.sp, lineHeight = 18.sp)
+    Text(authorString, color = contentColor, style = MaterialTheme.typography.bodyMedium)
 
     val seriesString =
         item.series?.let {
@@ -723,11 +824,12 @@ private fun AudiobookDetails(
 
     val secondLine = listOfNotNull(seriesString, fileSizeString, item.publisher).joinToString(BULLET)
     if (secondLine.isNotEmpty()) {
-        Text(secondLine, color = contentColor, fontSize = 14.sp, lineHeight = 18.sp)
+        Text(secondLine, color = contentColor, style = MaterialTheme.typography.bodyMedium)
     }
 
-    val statusStr = mokoString(item.status.resource)
-    Text(statusStr, color = contentColor, fontSize = 14.sp, lineHeight = 18.sp)
+    val releaseDate = item.publishedDate?.format("MMMM d, yyyy") ?: item.publishYear
+    val statusStr = listOfNotNull(mokoString(item.status.resource), releaseDate).joinToString(BULLET)
+    Text(statusStr, color = contentColor, style = MaterialTheme.typography.bodyMedium)
 }
 
 @Composable
@@ -739,7 +841,7 @@ private fun SearchAudiobookDetails(
         if (showBannerBackground) Color.White else MaterialTheme.colorScheme.onSurface
 
     val authorString = item.authors.joinToString(", ") { it.name }
-    Text(authorString, color = contentColor, fontSize = 14.sp, lineHeight = 18.sp)
+    Text(authorString, color = contentColor, style = MaterialTheme.typography.bodyMedium)
 
     val seriesString =
         item.series.firstOrNull()?.let {
@@ -747,11 +849,11 @@ private fun SearchAudiobookDetails(
         }
     val secondLine = listOfNotNull(seriesString, item.publisher).joinToString(BULLET)
     if (secondLine.isNotEmpty()) {
-        Text(secondLine, color = contentColor, fontSize = 14.sp, lineHeight = 18.sp)
+        Text(secondLine, color = contentColor, style = MaterialTheme.typography.bodyMedium)
     }
 
     item.releaseDate?.format("MMMM d, yyyy")?.let {
-        Text(it, color = contentColor, fontSize = 14.sp, lineHeight = 18.sp)
+        Text(it, color = contentColor, style = MaterialTheme.typography.bodyMedium)
     }
 }
 
@@ -762,9 +864,12 @@ private fun MockDetails(
 ) {
     val contentColor =
         if (showBannerBackground) Color.White else MaterialTheme.colorScheme.onSurface
+    val secondaryContentColor =
+        if (showBannerBackground) Color.White.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurfaceVariant
 
-    Text("Mock Studio", color = contentColor, fontSize = 14.sp, lineHeight = 18.sp)
-    Text("Mock Quality", color = contentColor, fontSize = 14.sp, lineHeight = 18.sp)
+    Text("Mock Studio", color = contentColor, style = MaterialTheme.typography.bodyMedium)
+    Text("Mock Quality", color = contentColor, style = MaterialTheme.typography.bodyMedium)
+    Text("Any • 1080p • HD", color = secondaryContentColor, style = MaterialTheme.typography.bodySmall)
 }
 
 @Composable
@@ -773,13 +878,20 @@ fun BannerView(
     modifier: Modifier = Modifier,
     blur: Blur = Blur.Normal,
 ) {
+    val blurModifier =
+        if (blur.radius > 0) {
+            Modifier.blur(blur.radius.dp)
+        } else {
+            Modifier
+        }
+
     Box(modifier = modifier) {
         when (bannerModel) {
             is Painter -> {
                 Image(
                     painter = bannerModel,
                     contentDescription = null,
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.fillMaxSize().then(blurModifier),
                     contentScale = ContentScale.Crop,
                     alpha = 0.5f,
                 )
@@ -789,7 +901,7 @@ fun BannerView(
                 AsyncImage(
                     model = bannerModel,
                     contentDescription = null,
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.fillMaxSize().then(blurModifier),
                     contentScale = ContentScale.Crop,
                     alpha = 0.5f,
                 )

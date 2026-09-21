@@ -22,9 +22,10 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.WarningAmber
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LoadingIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
@@ -48,12 +49,13 @@ import com.dnfapps.arrmatey.arr.state.ProwlarrIndexersState
 import com.dnfapps.arrmatey.arr.viewmodel.ProwlarrIndexersViewModel
 import com.dnfapps.arrmatey.shared.MR
 import com.dnfapps.arrmatey.ui.components.ContainerCard
+import com.dnfapps.arrmatey.ui.helpers.LocalFloatingBarBottomPadding
 import com.dnfapps.arrmatey.ui.theme.ArrOrange
 import com.dnfapps.arrmatey.utils.format
 import com.dnfapps.arrmatey.utils.mokoString
 import kotlin.time.ExperimentalTime
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalTime::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3ExpressiveApi::class, ExperimentalTime::class)
 @Composable
 fun ProwlarrIndexersContent(
     modifier: Modifier = Modifier,
@@ -76,7 +78,7 @@ fun ProwlarrIndexersContent(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center,
                 ) {
-                    CircularProgressIndicator()
+                    androidx.compose.material3.LoadingIndicator()
                 }
             }
 
@@ -129,7 +131,7 @@ fun ProwlarrIndexersContent(
                                     onShowIssues = { showIndexerStatus = indexerStatus },
                                 )
                             }
-                            item { Spacer(modifier = Modifier.size(4.dp)) }
+                            item { Spacer(modifier = Modifier.size(4.dp + LocalFloatingBarBottomPadding.current)) }
                         }
                     }
                 }

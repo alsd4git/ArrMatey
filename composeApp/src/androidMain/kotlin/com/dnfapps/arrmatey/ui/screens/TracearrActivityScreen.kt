@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.List
@@ -54,11 +53,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.dnfapps.arrmatey.androidModule
 import com.dnfapps.arrmatey.di.appModules
@@ -76,6 +73,7 @@ import com.dnfapps.arrmatey.tracearr.api.model.TracearrPeriod
 import com.dnfapps.arrmatey.tracearr.state.TracearrActivityState
 import com.dnfapps.arrmatey.tracearr.viewmodel.TracearrActivityViewModel
 import com.dnfapps.arrmatey.ui.components.NoInstanceView
+import com.dnfapps.arrmatey.ui.helpers.LocalFloatingBarBottomPadding
 import com.dnfapps.arrmatey.ui.theme.ArrBlue
 import com.dnfapps.arrmatey.ui.theme.ArrMateyTheme
 import com.dnfapps.arrmatey.ui.theme.ArrOrange
@@ -254,7 +252,15 @@ fun TracearrActivityContent(
                                         start = 16.dp,
                                         end = 16.dp,
                                         top = 16.dp,
-                                        bottom = 16.dp + navigationBarBottomInset(),
+                                        bottom =
+                                            16.dp +
+                                                if (LocalFloatingBarBottomPadding.current >
+                                                    0.dp
+                                                ) {
+                                                    LocalFloatingBarBottomPadding.current
+                                                } else {
+                                                    navigationBarBottomInset()
+                                                },
                                     ),
                                 verticalArrangement = Arrangement.spacedBy(16.dp),
                             ) {
@@ -339,7 +345,15 @@ fun TracearrActivityContent(
                                         start = 16.dp,
                                         end = 16.dp,
                                         top = 16.dp,
-                                        bottom = 16.dp + navigationBarBottomInset(),
+                                        bottom =
+                                            16.dp +
+                                                if (LocalFloatingBarBottomPadding.current >
+                                                    0.dp
+                                                ) {
+                                                    LocalFloatingBarBottomPadding.current
+                                                } else {
+                                                    navigationBarBottomInset()
+                                                },
                                     ),
                                 verticalArrangement = Arrangement.spacedBy(16.dp),
                             ) {
@@ -397,14 +411,13 @@ private fun rememberMarker(): CartesianMarker {
     val labelBackground =
         rememberShapeComponent(
             fill = Fill(MaterialTheme.colorScheme.surfaceContainerHigh),
-            shape = MarkerCornerBasedShape(base = RoundedCornerShape(8.dp)),
+            shape = MarkerCornerBasedShape(base = MaterialTheme.shapes.small),
         )
     val label =
         rememberTextComponent(
             style =
-                TextStyle(
+                MaterialTheme.typography.labelSmall.copy(
                     color = MaterialTheme.colorScheme.onSurface,
-                    fontSize = 12.sp,
                     fontWeight = FontWeight.SemiBold,
                 ),
             padding = Insets(8.dp, 4.dp),

@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -50,7 +49,7 @@ fun WelcomePage(modifier: Modifier = Modifier) {
             modifier =
                 Modifier
                     .size(96.dp)
-                    .clip(RoundedCornerShape(24.dp))
+                    .clip(MaterialTheme.shapes.extraLarge)
                     .background(MaterialTheme.colorScheme.primaryContainer),
             contentAlignment = Alignment.Center,
         ) {
@@ -89,7 +88,7 @@ fun WelcomePage(modifier: Modifier = Modifier) {
         ) {
             InstanceType.entries.forEach { type ->
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
+                    shape = MaterialTheme.shapes.medium,
                     color = MaterialTheme.colorScheme.surfaceContainerHigh,
                 ) {
                     Row(
@@ -113,7 +112,7 @@ fun WelcomePage(modifier: Modifier = Modifier) {
             }
             DownloadClientType.entries.forEach { clientType ->
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
+                    shape = MaterialTheme.shapes.medium,
                     color = MaterialTheme.colorScheme.surfaceContainerHigh,
                 ) {
                     Row(

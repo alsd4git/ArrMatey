@@ -6,16 +6,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 
 @Composable
 fun AMOutlinedTextField(
@@ -35,16 +35,24 @@ fun AMOutlinedTextField(
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     trailingIcon: @Composable (() -> Unit)? = null,
+    colors: TextFieldColors =
+        OutlinedTextFieldDefaults.colors(
+            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            disabledBorderColor = MaterialTheme.colorScheme.outlineVariant,
+        ),
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(4.dp),
         modifier = modifier,
     ) {
         label?.let {
+            val errorColor = MaterialTheme.colorScheme.error
             val labelText =
                 buildAnnotatedString {
                     if (required) {
-                        withStyle(SpanStyle(color = Color.Red)) {
+                        withStyle(SpanStyle(color = errorColor)) {
                             append("* ")
                         }
                     }
@@ -52,8 +60,13 @@ fun AMOutlinedTextField(
                 }
             Text(
                 text = labelText,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = if (enabled) 1f else 0.5f),
-                fontSize = 14.sp,
+                style = MaterialTheme.typography.bodyMedium,
+                color =
+                    when {
+                        !enabled -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                        isError -> MaterialTheme.colorScheme.error
+                        else -> MaterialTheme.colorScheme.onSurfaceVariant
+                    },
                 maxLines = 1,
             )
         }
@@ -66,7 +79,7 @@ fun AMOutlinedTextField(
                     {
                         Text(
                             text = it,
-                            fontSize = 14.sp,
+                            style = MaterialTheme.typography.bodyMedium,
                             maxLines = 1,
                         )
                     }
@@ -75,7 +88,7 @@ fun AMOutlinedTextField(
             isError = isError,
             supportingText =
                 if (isError && errorMessage != null) {
-                    { Text(text = errorMessage) }
+                    { Text(text = errorMessage, style = MaterialTheme.typography.bodySmall) }
                 } else {
                     null
                 },
@@ -86,13 +99,13 @@ fun AMOutlinedTextField(
             trailingIcon = trailingIcon,
             maxLines = maxLines,
             minLines = minLines,
+            colors = colors,
         )
         description?.let {
             Text(
                 text = it,
-                color = MaterialTheme.colorScheme.onSurface,
-                fontSize = 12.sp,
-                lineHeight = 14.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = if (enabled) 1f else 0.38f),
+                style = MaterialTheme.typography.bodySmall,
             )
         }
     }

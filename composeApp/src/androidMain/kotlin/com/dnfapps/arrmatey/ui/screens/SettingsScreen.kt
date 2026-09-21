@@ -64,6 +64,7 @@ import com.dnfapps.arrmatey.shared.MR
 import com.dnfapps.arrmatey.ui.components.SettingsGroup
 import com.dnfapps.arrmatey.ui.components.navigation.NavigationDrawerButton
 import com.dnfapps.arrmatey.ui.components.settings.AboutCard
+import com.dnfapps.arrmatey.ui.helpers.LocalFloatingBarBottomPadding
 import com.dnfapps.arrmatey.ui.icons.Hard_drive
 import com.dnfapps.arrmatey.utils.MokoStrings
 import com.dnfapps.arrmatey.utils.mokoString
@@ -130,7 +131,19 @@ fun SettingsScreen(
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = 24.dp)
-                    .padding(bottom = navigationBarBottomInset() + 16.dp),
+                    .padding(
+                        bottom =
+                            (
+                                if (LocalFloatingBarBottomPadding.current >
+                                    0.dp
+                                ) {
+                                    LocalFloatingBarBottomPadding.current
+                                } else {
+                                    navigationBarBottomInset()
+                                }
+                            ) +
+                                16.dp,
+                    ),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             if (
@@ -259,7 +272,7 @@ fun SettingsScreen(
                 Button(onClick = {
                     throw IllegalStateException("THIS IS A SIMULATED CRASH")
                 }) {
-                    Text("Simulate crash")
+                    Text(mokoString(MR.strings.simulate_crash))
                 }
 
                 Card(

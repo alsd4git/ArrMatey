@@ -51,6 +51,7 @@ import com.dnfapps.arrmatey.ui.components.ItemDescriptionCard
 import com.dnfapps.arrmatey.ui.components.OverlayTopAppBar
 import com.dnfapps.arrmatey.ui.components.PersonDetailsHeader
 import com.dnfapps.arrmatey.ui.components.PosterItem
+import com.dnfapps.arrmatey.ui.helpers.LocalFloatingBarBottomPadding
 import com.dnfapps.arrmatey.utils.GridDensity
 import com.dnfapps.arrmatey.utils.format
 import com.dnfapps.arrmatey.utils.mokoString
@@ -120,7 +121,12 @@ fun SeerrPersonDetailsScreen(
                             columns = GridCells.Adaptive(minSize = GridDensity.Normal.minSize),
                             state = gridState,
                             modifier = Modifier.fillMaxSize(),
-                            contentPadding = PaddingValues(bottom = 24.dp, start = 24.dp, end = 24.dp),
+                            contentPadding =
+                                PaddingValues(
+                                    bottom = 24.dp + LocalFloatingBarBottomPadding.current,
+                                    start = 24.dp,
+                                    end = 24.dp,
+                                ),
                             horizontalArrangement = Arrangement.spacedBy(12.dp),
                             verticalArrangement = Arrangement.spacedBy(12.dp),
                         ) {

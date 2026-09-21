@@ -35,6 +35,7 @@ import com.dnfapps.arrmatey.arr.api.model.CalendarItem
 import com.dnfapps.arrmatey.arr.state.CalendarState
 import com.dnfapps.arrmatey.instances.model.Instance
 import com.dnfapps.arrmatey.shared.MR
+import com.dnfapps.arrmatey.ui.helpers.LocalFloatingBarBottomPadding
 import com.dnfapps.arrmatey.utils.mokoString
 import kotlinx.coroutines.launch
 
@@ -47,6 +48,8 @@ fun CalendarListView(
 ) {
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
+    val preferencesStore: com.dnfapps.arrmatey.datastore.PreferencesStore = org.koin.compose.koinInject()
+    val useColoredCards by preferencesStore.useColoredCalendarCards.collectAsStateWithLifecycle(false)
 
     val endOfListReached by remember(state.dates) {
         derivedStateOf {
@@ -87,7 +90,13 @@ fun CalendarListView(
         LazyColumn(
             state = listState,
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+            contentPadding =
+                PaddingValues(
+                    start = 16.dp,
+                    end = 16.dp,
+                    top = 8.dp,
+                    bottom = 8.dp + LocalFloatingBarBottomPadding.current,
+                ),
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             items(
@@ -98,6 +107,7 @@ fun CalendarListView(
                     date = date,
                     items = state.items[date] ?: emptyList(),
                     instances = instances,
+                    useFullColorCards = useColoredCards,
                     onItemClick = onItemClick,
                 )
             }
@@ -117,7 +127,6 @@ fun CalendarListView(
             }
         }
 
-        val preferencesStore: com.dnfapps.arrmatey.datastore.PreferencesStore = org.koin.compose.koinInject()
         val useFloatingNavigationBar by preferencesStore.useFloatingNavigationBar.collectAsStateWithLifecycle(false)
 
         com.dnfapps.arrmatey.ui.components.appbar.ProvideFloatingBarAction(

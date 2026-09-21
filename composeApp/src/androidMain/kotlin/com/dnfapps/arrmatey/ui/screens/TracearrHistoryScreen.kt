@@ -40,6 +40,7 @@ import com.dnfapps.arrmatey.tracearr.api.model.TracearrMediaType
 import com.dnfapps.arrmatey.tracearr.state.TracearrHistoryState
 import com.dnfapps.arrmatey.tracearr.viewmodel.TracearrHistoryViewModel
 import com.dnfapps.arrmatey.ui.components.NoInstanceView
+import com.dnfapps.arrmatey.ui.helpers.LocalFloatingBarBottomPadding
 import com.dnfapps.arrmatey.ui.screens.tracearr.TracearrHistoryCard
 import com.dnfapps.arrmatey.ui.screens.tracearr.TracearrHistoryTable
 import com.dnfapps.arrmatey.ui.screens.tracearr.TracearrStreamCard
@@ -148,7 +149,15 @@ fun TracearrHistoryScreen(
                                 start = 16.dp,
                                 end = 16.dp,
                                 top = 16.dp,
-                                bottom = 16.dp + navigationBarBottomInset(),
+                                bottom =
+                                    16.dp +
+                                        if (LocalFloatingBarBottomPadding.current >
+                                            0.dp
+                                        ) {
+                                            LocalFloatingBarBottomPadding.current
+                                        } else {
+                                            navigationBarBottomInset()
+                                        },
                             ),
                         verticalArrangement = Arrangement.spacedBy(12.dp),
                     ) {

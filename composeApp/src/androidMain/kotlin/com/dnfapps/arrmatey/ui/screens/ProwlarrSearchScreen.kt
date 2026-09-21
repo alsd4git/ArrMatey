@@ -49,6 +49,7 @@ import com.dnfapps.arrmatey.arr.viewmodel.ProwlarrSearchViewModel
 import com.dnfapps.arrmatey.compose.utils.bytesAsFileSizeString
 import com.dnfapps.arrmatey.model.OperationStatus
 import com.dnfapps.arrmatey.shared.MR
+import com.dnfapps.arrmatey.ui.helpers.LocalFloatingBarBottomPadding
 import com.dnfapps.arrmatey.utils.mokoString
 import dev.icerock.moko.resources.compose.stringResource
 
@@ -141,7 +142,7 @@ fun ProwlarrSearchContent(
                                 onGrab = { grabTarget = result },
                             )
                         }
-                        item { Spacer(modifier = Modifier.height(4.dp)) }
+                        item { Spacer(modifier = Modifier.height(4.dp + LocalFloatingBarBottomPadding.current)) }
                     }
                 }
             }

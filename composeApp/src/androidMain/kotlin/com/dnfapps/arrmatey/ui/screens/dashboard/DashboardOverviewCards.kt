@@ -3,6 +3,7 @@ package com.dnfapps.arrmatey.ui.screens.dashboard
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -66,6 +67,7 @@ fun DashboardOverviewCards(
             CardDefaults.cardColors(
                 containerColor = containerColor,
             ),
+        border = if (isEditing) BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)) else null,
     ) {
         Column(
             modifier = Modifier.padding(internalPadding),
@@ -99,19 +101,29 @@ fun DashboardOverviewCards(
                     icon = Icons.Default.Storage,
                     label = mokoString(MR.strings.total_space),
                     value = totalSize.bytesAsFileSizeString(),
-                    color = MaterialTheme.colorScheme.primaryContainer,
+                    iconColor = MaterialTheme.colorScheme.primary,
                 )
+
+                val hasErrors = criticalIssues > 0
+                val hasWarnings = totalIssues > 0
+                val healthColor =
+                    when {
+                        hasErrors -> MaterialTheme.colorScheme.error
+                        hasWarnings -> ArrYellow
+                        else -> MaterialTheme.colorScheme.primary
+                    }
 
                 StatCard(
                     modifier = Modifier.weight(1f),
-                    icon = if (totalIssues > 0) Icons.Default.Warning else Icons.Default.CheckCircle,
+                    icon = if (hasWarnings) Icons.Default.Warning else Icons.Default.CheckCircle,
                     label = mokoString(MR.strings.health),
                     value = if (totalIssues == 0) mokoString(MR.strings.no_issues) else "$totalIssues Issues",
-                    color =
-                        when {
-                            criticalIssues > 0 -> MaterialTheme.colorScheme.errorContainer
-                            totalIssues > 0 -> ArrYellow.copy(alpha = 0.2f)
-                            else -> MaterialTheme.colorScheme.secondaryContainer
+                    iconColor = healthColor,
+                    containerColor =
+                        if (hasErrors) {
+                            MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.25f)
+                        } else {
+                            MaterialTheme.colorScheme.surfaceContainerHigh
                         },
                     onClick = if (!isEditing) onHealthClick else null,
                 )

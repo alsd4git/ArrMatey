@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.BookmarkBorder
@@ -42,7 +41,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
-import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
 import com.dnfapps.arrmatey.compose.utils.bytesAsFileSizeString
 import com.dnfapps.arrmatey.entensions.BULLET
@@ -73,13 +71,15 @@ fun EpisodeRow(
     val arrEp = episode.arrEpisode
 
     Column(
-        verticalArrangement = Arrangement.spacedBy(4.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
         modifier =
-            modifier.combinedClickable(
-                enabled = onClick != null || onLongClick != null,
-                onClick = onClick ?: {},
-                onLongClick = onLongClick,
-            ),
+            modifier
+                .padding(vertical = 4.dp)
+                .combinedClickable(
+                    enabled = onClick != null || onLongClick != null,
+                    onClick = onClick ?: {},
+                    onLongClick = onLongClick,
+                ),
     ) {
         Row(
             verticalAlignment = Alignment.Top,
@@ -88,30 +88,29 @@ fun EpisodeRow(
             Column(
                 modifier = Modifier.weight(1f),
             ) {
+                val finaleTypeStyle = MaterialTheme.typography.labelSmall.toSpanStyle()
                 val titleString =
                     buildAnnotatedString {
-                        withStyle(SpanStyle(fontSize = 16.sp)) {
-                            withStyle(SpanStyle(color = MaterialTheme.colorScheme.primary)) {
-                                append("${episode.episodeNumber}. ")
-                            }
-                            withStyle(SpanStyle(fontWeight = FontWeight.Medium)) {
-                                append(episode.title ?: "")
-                            }
-                            episode.finaleType?.let { finalType ->
-                                withStyle(
-                                    SpanStyle(
-                                        fontSize = 12.sp,
-                                        color = MaterialTheme.colorScheme.secondary,
-                                    ),
-                                ) {
-                                    bullet()
-                                    append(mokoString(finalType.resource))
-                                }
+                        withStyle(SpanStyle(color = MaterialTheme.colorScheme.primary)) {
+                            append("${episode.episodeNumber}. ")
+                        }
+                        withStyle(SpanStyle(fontWeight = FontWeight.Medium)) {
+                            append(episode.title ?: "")
+                        }
+                        episode.finaleType?.let { finalType ->
+                            withStyle(
+                                finaleTypeStyle.copy(
+                                    color = MaterialTheme.colorScheme.secondary,
+                                ),
+                            ) {
+                                bullet()
+                                append(mokoString(finalType.resource))
                             }
                         }
                     }
                 Text(
                     text = titleString,
+                    style = MaterialTheme.typography.titleMedium,
                     lineHeight = 1.4.em,
                     overflow = TextOverflow.MiddleEllipsis,
                     maxLines = 2,
@@ -135,7 +134,7 @@ fun EpisodeRow(
                     if (statusText != null) {
                         Text(
                             text = statusText,
-                            fontSize = 14.sp,
+                            style = MaterialTheme.typography.bodySmall,
                             color = statusColor,
                             fontStyle = FontStyle.Italic,
                         )
@@ -146,7 +145,7 @@ fun EpisodeRow(
                         Text(
                             text = "$prefix$fileSizeString",
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            fontSize = 14.sp,
+                            style = MaterialTheme.typography.bodySmall,
                         )
                     }
 
@@ -163,7 +162,7 @@ fun EpisodeRow(
                             text = "$prefix$formattedDate",
                             color = color,
                             fontWeight = weight,
-                            fontSize = 14.sp,
+                            style = MaterialTheme.typography.bodySmall,
                         )
                     }
                 }
@@ -176,18 +175,19 @@ fun EpisodeRow(
             ) {
                 if (arrEp != null) {
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(0.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         IconButton(
                             onClick = {
                                 onNavigateToSeriesRelease(arrEp.id)
                             },
-                            modifier = Modifier.size(24.dp),
+                            modifier = Modifier.size(32.dp),
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Person,
                                 contentDescription = null,
+                                modifier = Modifier.size(20.dp),
                             )
                         }
                         IconButton(
@@ -195,16 +195,18 @@ fun EpisodeRow(
                                 onAutomaticSearch(arrEp.id)
                             },
                             enabled = arrEp.monitored && !searchInProgress(arrEp.id),
-                            modifier = Modifier.size(24.dp),
+                            modifier = Modifier.size(32.dp),
                         ) {
                             if (searchInProgress(arrEp.id)) {
                                 CircularProgressIndicator(
-                                    modifier = Modifier.size(24.dp),
+                                    modifier = Modifier.size(18.dp),
+                                    strokeWidth = 2.dp,
                                 )
                             } else {
                                 Icon(
                                     imageVector = Icons.Default.Search,
                                     contentDescription = null,
+                                    modifier = Modifier.size(20.dp),
                                 )
                             }
                         }
@@ -212,7 +214,7 @@ fun EpisodeRow(
                             onClick = {
                                 onToggleMonitor(arrEp)
                             },
-                            modifier = Modifier.size(24.dp),
+                            modifier = Modifier.size(32.dp),
                         ) {
                             AnimatedContent(
                                 targetState = arrEp.monitored,
@@ -229,6 +231,7 @@ fun EpisodeRow(
                                             Icons.Default.BookmarkBorder
                                         },
                                     contentDescription = null,
+                                    modifier = Modifier.size(20.dp),
                                 )
                             }
                         }
@@ -250,7 +253,7 @@ fun EpisodeRow(
                         Modifier
                             .height(70.dp)
                             .aspectRatio(1.77f)
-                            .clip(RoundedCornerShape(8.dp))
+                            .clip(MaterialTheme.shapes.small)
                             .background(MaterialTheme.colorScheme.surfaceContainerHigh),
                     contentDescription = null,
                 )

@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Icon
@@ -23,7 +22,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.dnfapps.arrmatey.arr.api.model.LidarrTrack
 import com.dnfapps.arrmatey.arr.api.model.LidarrTrackFile
 import com.dnfapps.arrmatey.entensions.bullet
@@ -68,18 +66,16 @@ fun TrackRow(
         ) {
             val titleString =
                 buildAnnotatedString {
-                    withStyle(SpanStyle(fontSize = 16.sp)) {
-                        withStyle(SpanStyle(color = MaterialTheme.colorScheme.primary)) {
-                            append("${track.absoluteTrackNumber}.")
-                        }
-                        withStyle(SpanStyle(fontWeight = FontWeight.Medium)) {
-                            append(track.title)
-                        }
+                    withStyle(SpanStyle(color = MaterialTheme.colorScheme.primary)) {
+                        append("${track.absoluteTrackNumber}.")
+                    }
+                    withStyle(SpanStyle(fontWeight = FontWeight.Medium)) {
+                        append(track.title)
                     }
                 }
             Text(
                 text = titleString,
-                lineHeight = 16.sp,
+                style = MaterialTheme.typography.titleMedium,
                 overflow = TextOverflow.MiddleEllipsis,
                 maxLines = 1,
             )
@@ -95,7 +91,6 @@ fun TrackRow(
                 buildAnnotatedString {
                     withStyle(
                         SpanStyle(
-                            fontSize = 14.sp,
                             color = MaterialTheme.colorScheme.secondary,
                         ),
                     ) {
@@ -104,7 +99,6 @@ fun TrackRow(
                     bullet()
                     withStyle(
                         SpanStyle(
-                            fontSize = 14.sp,
                             color = statusColor,
                             fontStyle = FontStyle.Italic,
                         ),
@@ -112,13 +106,16 @@ fun TrackRow(
                         append(statusText)
                     }
                 }
-            Text(styledStatusText)
+            Text(
+                text = styledStatusText,
+                style = MaterialTheme.typography.bodySmall,
+            )
         }
 
         mediaInfoStatusCondensed?.let { staus ->
             Surface(
                 color = MaterialTheme.colorScheme.primary,
-                shape = RoundedCornerShape(4.dp),
+                shape = MaterialTheme.shapes.extraSmall,
             ) {
                 Text(
                     text = staus,

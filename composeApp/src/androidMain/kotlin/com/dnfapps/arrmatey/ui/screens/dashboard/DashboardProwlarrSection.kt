@@ -3,6 +3,7 @@ package com.dnfapps.arrmatey.ui.screens.dashboard
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -28,7 +29,6 @@ import com.dnfapps.arrmatey.arr.state.CombinedDashboardState
 import com.dnfapps.arrmatey.instances.model.InstanceType
 import com.dnfapps.arrmatey.shared.MR
 import com.dnfapps.arrmatey.ui.theme.ArrGreen
-import com.dnfapps.arrmatey.ui.theme.surfaceLight
 import com.dnfapps.arrmatey.utils.mokoString
 import dev.icerock.moko.resources.compose.painterResource
 
@@ -64,6 +64,7 @@ fun DashboardProwlarrSection(
             CardDefaults.cardColors(
                 containerColor = containerColor,
             ),
+        border = if (isEditing) BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)) else null,
     ) {
         Column(
             modifier = Modifier.padding(internalPadding),
@@ -97,18 +98,24 @@ fun DashboardProwlarrSection(
                     modifier = Modifier.weight(1f),
                     label = mokoString(MR.strings.healthy_indexers),
                     count = totalHealthyIndexers,
-                    containerColor = ArrGreen,
-                    contentColor = surfaceLight,
+                    iconColor = ArrGreen,
                 )
                 CountStatItem(
                     icon = Icons.Default.Error,
                     modifier = Modifier.weight(1f),
                     label = mokoString(MR.strings.failing_indexers),
                     count = totalFailingIndexers,
+                    iconColor =
+                        if (totalFailingIndexers > 0) {
+                            MaterialTheme.colorScheme.error
+                        } else {
+                            MaterialTheme.colorScheme.secondary
+                        },
                     containerColor =
-                        when {
-                            totalFailingIndexers > 0 -> MaterialTheme.colorScheme.errorContainer
-                            else -> MaterialTheme.colorScheme.secondaryContainer
+                        if (totalFailingIndexers > 0) {
+                            MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.25f)
+                        } else {
+                            MaterialTheme.colorScheme.surfaceContainerHigh
                         },
                 )
             }

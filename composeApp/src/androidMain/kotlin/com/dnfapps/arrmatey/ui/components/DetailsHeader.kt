@@ -1,5 +1,6 @@
 package com.dnfapps.arrmatey.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,6 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -28,7 +30,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.dnfapps.arrmatey.arr.api.model.ArrMedia
 import com.dnfapps.arrmatey.arr.api.model.Arrtist
 import com.dnfapps.arrmatey.arr.api.model.Author
@@ -131,32 +132,40 @@ fun DetailsHeader(
 fun RatingsSection(ratings: List<RatingItem>) {
     if (ratings.isNotEmpty()) {
         FlowRow(
-            verticalArrangement = Arrangement.Center,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             ratings.forEach { rating ->
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                Surface(
+                    shape = MaterialTheme.shapes.small,
+                    color = MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.95f),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f)),
                 ) {
-                    rating.icon?.let { icon ->
-                        Icon(
-                            painter = painterResource(icon),
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                    ) {
+                        rating.icon?.let { icon ->
+                            Icon(
+                                painter = painterResource(icon),
+                                contentDescription = null,
+                                tint = Color.Unspecified,
+                                modifier = Modifier.size(16.dp),
+                            )
+                        } ?: Icon(
+                            imageVector = Icons.Default.Star,
                             contentDescription = null,
-                            tint = Color.Unspecified,
+                            tint = ArrOrange,
                             modifier = Modifier.size(16.dp),
                         )
-                    } ?: Icon(
-                        imageVector = Icons.Default.Star,
-                        contentDescription = null,
-                        tint = ArrOrange,
-                        modifier = Modifier.size(16.dp),
-                    )
-                    Text(
-                        text = rating.score,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold,
-                    )
+                        Text(
+                            text = rating.score,
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                    }
                 }
             }
         }
@@ -203,15 +212,14 @@ fun DetailsHeader(item: RequestMediaDetails) {
                             },
                             item.getCertification(LocalLocale.current.platformLocale.country),
                         ).joinToString(BULLET),
-                    fontSize = 16.sp,
+                    style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(top = 6.dp),
                 )
                 Text(
                     item.genres.joinToString(BULLET) { it.name },
-                    fontSize = 14.sp,
+                    style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.secondary,
                     overflow = TextOverflow.Ellipsis,
-                    lineHeight = 16.sp,
                 )
             }
         }

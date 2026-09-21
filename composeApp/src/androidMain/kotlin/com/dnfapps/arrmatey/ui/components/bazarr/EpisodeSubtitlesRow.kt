@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PriorityHigh
 import androidx.compose.material.icons.filled.Subtitles
@@ -21,7 +20,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.dnfapps.arrmatey.bazarr.api.model.BazarrEpisode
 
 @Composable
@@ -67,12 +65,12 @@ fun EpisodeSubtitlesRow(
                     Modifier
                         .background(
                             color = MaterialTheme.colorScheme.secondaryContainer,
-                            shape = RoundedCornerShape(4.dp),
+                            shape = MaterialTheme.shapes.extraSmall,
                         ).padding(horizontal = 4.dp, vertical = 1.dp),
             ) {
                 Text(
                     text = label,
-                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                    style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSecondaryContainer,
                     fontWeight = FontWeight.Medium,
                 )
@@ -87,7 +85,7 @@ fun EpisodeSubtitlesRow(
                         .border(
                             width = 1.dp,
                             color = MaterialTheme.colorScheme.error.copy(alpha = 0.6f),
-                            shape = RoundedCornerShape(4.dp),
+                            shape = MaterialTheme.shapes.extraSmall,
                         ).padding(horizontal = 4.dp, vertical = 1.dp),
             ) {
                 Row(
@@ -101,7 +99,7 @@ fun EpisodeSubtitlesRow(
                     )
                     Text(
                         text = label,
-                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                        style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.error,
                         fontWeight = FontWeight.Medium,
                     )
