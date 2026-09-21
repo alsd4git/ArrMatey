@@ -136,8 +136,6 @@
 				44618216303DCD2A00FD074C /* iosAppTests */,
 			);
 			name = iosAppTests;
-			packageProductDependencies = (
-			);
 			productName = iosAppTests;
 			productReference = 44618215303DCD2A00FD074C /* iosAppTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
@@ -209,13 +207,9 @@
 			buildActionMask = 2147483647;
 			files = (
 			);
-			inputFileListPaths = (
-			);
 			inputPaths = (
 			);
 			name = "MOKO Resources";
-			outputFileListPaths = (
-			);
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -228,13 +222,9 @@
 			buildActionMask = 2147483647;
 			files = (
 			);
-			inputFileListPaths = (
-			);
 			inputPaths = (
 			);
 			name = "Compile Kotlin Framework";
-			outputFileListPaths = (
-			);
 			outputPaths = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -460,6 +450,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = iosApp/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "ArrMatey (Dev)";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "We need access to WiFi information to enable local network switching";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We need access to WiFi information to enable local network switching";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -482,7 +473,7 @@
 		BF637D9A8B9FAE90207FB10B /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = "AppIcon-Dev";
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = ThemePrimary;
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
@@ -492,6 +483,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = iosApp/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "ArrMatey (Dev)";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "We need access to WiFi information to enable local network switching";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We need access to WiFi information to enable local network switching";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
