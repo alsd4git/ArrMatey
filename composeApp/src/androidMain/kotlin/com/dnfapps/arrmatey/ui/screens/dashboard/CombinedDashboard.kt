@@ -83,6 +83,7 @@ import com.dnfapps.arrmatey.entensions.PaddingValues
 import com.dnfapps.arrmatey.entensions.isExpanded
 import com.dnfapps.arrmatey.instances.model.InstanceType
 import com.dnfapps.arrmatey.model.OperationStatus
+import com.dnfapps.arrmatey.seerr.api.model.DiscoverResult
 import com.dnfapps.arrmatey.seerr.api.model.MediaIssuePackage
 import com.dnfapps.arrmatey.seerr.api.model.MediaRequestPackage
 import com.dnfapps.arrmatey.seerr.api.model.RequestType
@@ -90,6 +91,8 @@ import com.dnfapps.arrmatey.seerr.viewmodel.RequestsViewModel
 import com.dnfapps.arrmatey.shared.MR
 import com.dnfapps.arrmatey.tracearr.api.model.TracearrStreamSession
 import com.dnfapps.arrmatey.ui.components.ArrAppBarWithSearch
+import com.dnfapps.arrmatey.ui.components.appbar.FloatingBarAction
+import com.dnfapps.arrmatey.ui.components.appbar.ProvideFloatingBarAction
 import com.dnfapps.arrmatey.ui.components.navigation.NavigationDrawerButton
 import com.dnfapps.arrmatey.ui.helpers.LocalFloatingBarBottomPadding
 import com.dnfapps.arrmatey.ui.screens.requests.IssueDetailsSheet
@@ -98,6 +101,7 @@ import com.dnfapps.arrmatey.ui.screens.requests.RequestsList
 import com.dnfapps.arrmatey.ui.screens.tracearr.DashboardTracearrSection
 import com.dnfapps.arrmatey.ui.screens.tracearr.TracearrStreamDetailsSheet
 import com.dnfapps.arrmatey.ui.sheets.HealthNoticesSheet
+import com.dnfapps.arrmatey.ui.sheets.MediaRequestOrAddSheet
 import com.dnfapps.arrmatey.ui.sheets.SeerrViewRequestSheet
 import com.dnfapps.arrmatey.ui.tabs.ConfirmDeleteItemSheet
 import com.dnfapps.arrmatey.ui.tabs.DiscoverSearchOverlay
@@ -131,6 +135,8 @@ fun DashboardCardContent(
     enabled: Boolean = true,
     onNavigateToArrDashboard: (Long) -> Unit = {},
     onNavigateToMediaDetails: (id: Long, instanceType: InstanceType) -> Unit = { _, _ -> },
+    onNavigateToSeerrMediaDetails: (tmdbId: Long, requestType: RequestType) -> Unit = { _, _ -> },
+    onNavigateToDiscoverTab: () -> Unit = {},
     onRequestClick: (MediaRequestPackage) -> Unit = {},
     onIssueClick: (MediaIssuePackage) -> Unit = {},
     onRequestActivityItem: (QueueItem) -> Unit = {},
@@ -142,6 +148,8 @@ fun DashboardCardContent(
     onNavigateToTracearrUsers: () -> Unit = {},
     onNavigateToTracearrViolations: () -> Unit = {},
     onNavigateToTracearrActivity: () -> Unit = {},
+    onShuffleQuickPick: () -> Unit = {},
+    onMediaRequestClick: (DiscoverResult) -> Unit = {},
 ) {
     when (cardType) {
         DashboardCards.ArrOverview ->
@@ -280,6 +288,43 @@ fun DashboardCardContent(
                     if (!isEditing && enabled) onRequestStreamSession(session)
                 },
             )
+
+        DashboardCards.DiscoverFeed ->
+            DashboardDiscoverFeedSection(
+                state = currentState,
+                isEditing = isEditing,
+                enabled = !isEditing && enabled,
+                onMediaClick = { tmdbId, type ->
+                    if (!isEditing && enabled) onNavigateToSeerrMediaDetails(tmdbId, type)
+                },
+            )
+
+        DashboardCards.DiscoverSpotlight ->
+            DashboardDiscoverSpotlightSection(
+                state = currentState,
+                enabled = !isEditing && enabled,
+                isEditing = isEditing,
+                onMediaClick = { tmdbId, type ->
+                    if (!isEditing && enabled) onNavigateToSeerrMediaDetails(tmdbId, type)
+                },
+                onRequestClick = { item ->
+                    if (!isEditing && enabled) onMediaRequestClick(item)
+                },
+            )
+
+        DashboardCards.DiscoverQuickPick ->
+            DashboardDiscoverQuickPickSection(
+                state = currentState,
+                onShuffleClick = onShuffleQuickPick,
+                isEditing = isEditing,
+                enabled = !isEditing && enabled,
+                onMediaClick = { tmdbId, type ->
+                    if (!isEditing && enabled) onNavigateToSeerrMediaDetails(tmdbId, type)
+                },
+                onRequestClick = { item ->
+                    if (!isEditing && enabled) onMediaRequestClick(item)
+                },
+            )
     }
 }
 
@@ -309,6 +354,7 @@ fun CombinedDashboard(
     onNavigateToTracearrUsers: () -> Unit = {},
     onNavigateToTracearrViolations: () -> Unit = {},
     onNavigateToTracearrActivity: () -> Unit = {},
+    onNavigateToDiscoverTab: () -> Unit = {},
 ) {
     val isCompact = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Compact
     val hapticFeedback = LocalHapticFeedback.current
@@ -350,6 +396,7 @@ fun CombinedDashboard(
     var selectedIssueForSheet by remember { mutableStateOf<MediaIssuePackage?>(null) }
     var selectedActivityItem by remember { mutableStateOf<QueueItem?>(null) }
     var selectedTracearrStreamSession by remember { mutableStateOf<TracearrStreamSession?>(null) }
+    var selectedMediaForRequest by remember { mutableStateOf<DiscoverResult?>(null) }
     var showConfirmRemoveActivity by remember { mutableStateOf(false) }
     var showHealthNoticesSheet by remember { mutableStateOf(false) }
     var showSeerrRequestsSheet by remember { mutableStateOf(false) }
@@ -452,10 +499,10 @@ fun CombinedDashboard(
             val showFab = isEditing && availableCards.isNotEmpty()
             val useFloatingNavigationBar by preferencesStore.useFloatingNavigationBar.collectAsStateWithLifecycle(false)
 
-            com.dnfapps.arrmatey.ui.components.appbar.ProvideFloatingBarAction(
+            ProvideFloatingBarAction(
                 visible = useFloatingNavigationBar && showFab,
                 action =
-                    com.dnfapps.arrmatey.ui.components.appbar.FloatingBarAction(
+                    FloatingBarAction(
                         icon = { Icon(Icons.Default.Add, null) },
                         onClick = { showAddCardSheet = true },
                     ),
@@ -605,6 +652,10 @@ fun CombinedDashboard(
                                                         { onNavigateToTracearrTab() }
                                                     }
 
+                                                    DashboardCards.DiscoverFeed -> {
+                                                        { onNavigateToDiscoverTab() }
+                                                    }
+
                                                     else -> null
                                                 }
 
@@ -614,7 +665,7 @@ fun CombinedDashboard(
                                                         .padding(innerPadding)
                                                         .clip(MaterialTheme.shapes.large)
                                                         .combinedClickable(
-                                                            enabled = !isEditing,
+                                                            enabled = !isEditing && cardOnClick != null,
                                                             onClick = { cardOnClick?.invoke() },
                                                             onLongClick = {
                                                                 if (!isEditing) {
@@ -632,6 +683,8 @@ fun CombinedDashboard(
                                                     isEditing = isEditing,
                                                     onNavigateToArrDashboard = onNavigateToArrDashboard,
                                                     onNavigateToMediaDetails = onNavigateToMediaDetails,
+                                                    onNavigateToSeerrMediaDetails = onNavigateToSeerrMediaDetails,
+                                                    onNavigateToDiscoverTab = onNavigateToDiscoverTab,
                                                     onRequestClick = { selectedRequestForSheet = it },
                                                     onIssueClick = { selectedIssueForSheet = it },
                                                     onRequestActivityItem = { selectedActivityItem = it },
@@ -647,6 +700,8 @@ fun CombinedDashboard(
                                                     onNavigateToTracearrUsers = onNavigateToTracearrUsers,
                                                     onNavigateToTracearrViolations = onNavigateToTracearrViolations,
                                                     onNavigateToTracearrActivity = onNavigateToTracearrActivity,
+                                                    onShuffleQuickPick = { viewModel.shuffleQuickPick() },
+                                                    onMediaRequestClick = { if (!isEditing) selectedMediaForRequest = it },
                                                 )
                                             }
                                             if (isEditing) {
@@ -654,7 +709,7 @@ fun CombinedDashboard(
                                                     modifier =
                                                         Modifier
                                                             .align(Alignment.TopEnd)
-                                                            .padding(8.dp),
+                                                            .padding(top = 16.dp, end = 16.dp),
                                                     horizontalArrangement = Arrangement.spacedBy(4.dp),
                                                     verticalAlignment = Alignment.CenterVertically,
                                                 ) {
@@ -674,7 +729,7 @@ fun CombinedDashboard(
                                                         modifier = Modifier.size(32.dp),
                                                         colors =
                                                             IconButtonDefaults.filledTonalIconButtonColors(
-                                                                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                                                                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
                                                             ),
                                                     ) {
                                                         Icon(
@@ -700,7 +755,7 @@ fun CombinedDashboard(
                                                         modifier = Modifier.size(32.dp),
                                                         colors =
                                                             IconButtonDefaults.filledTonalIconButtonColors(
-                                                                containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+                                                                containerColor = MaterialTheme.colorScheme.surfaceContainerLow,
                                                             ),
                                                     ) {
                                                         Icon(
@@ -755,7 +810,7 @@ fun CombinedDashboard(
                             LazyVerticalStaggeredGrid(
                                 columns = StaggeredGridCells.Fixed(count = if (isCompact) 1 else 2),
                                 verticalItemSpacing = 16.dp,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp),
                                 contentPadding = PaddingValues(all = 16.dp),
                                 modifier = Modifier.fillMaxWidth(),
                             ) {
@@ -769,7 +824,7 @@ fun CombinedDashboard(
                                                 },
                                     ) {
                                         Column(
-                                            modifier = Modifier.padding(16.dp),
+                                            modifier = Modifier.padding(horizontal = 12.dp),
                                             verticalArrangement = Arrangement.spacedBy(12.dp),
                                         ) {
                                             Text(
@@ -783,6 +838,9 @@ fun CombinedDashboard(
                                                 currentState = CombinedDashboardState.Mock,
                                                 isEditing = false,
                                                 onNavigateToArrDashboard = onNavigateToArrDashboard,
+                                                onNavigateToMediaDetails = onNavigateToMediaDetails,
+                                                onNavigateToSeerrMediaDetails = onNavigateToSeerrMediaDetails,
+                                                onNavigateToDiscoverTab = onNavigateToDiscoverTab,
                                             )
                                         }
                                     }
@@ -934,6 +992,13 @@ fun CombinedDashboard(
                             )
                         }
                     }
+                }
+
+                selectedMediaForRequest?.let { item ->
+                    MediaRequestOrAddSheet(
+                        item = item,
+                        onDismiss = { selectedMediaForRequest = null },
+                    )
                 }
             }
         }

@@ -1,6 +1,7 @@
 package com.dnfapps.arrmatey.ui.screens.dashboard
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -28,6 +29,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -35,6 +37,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.dnfapps.arrmatey.arr.state.CombinedDashboardState
+import com.dnfapps.arrmatey.instances.model.InstanceType
 import com.dnfapps.arrmatey.seerr.api.model.IssueType
 import com.dnfapps.arrmatey.seerr.api.model.MediaIssuePackage
 import com.dnfapps.arrmatey.seerr.api.model.RequestType
@@ -45,6 +48,7 @@ import com.dnfapps.arrmatey.ui.screens.requests.IssueStatusChip
 import com.dnfapps.arrmatey.ui.screens.requests.UserInfoRow
 import com.dnfapps.arrmatey.utils.AspectRatio
 import com.dnfapps.arrmatey.utils.mokoString
+import dev.icerock.moko.resources.compose.painterResource
 
 @Composable
 fun DashboardPendingIssuesSection(
@@ -83,7 +87,18 @@ fun DashboardPendingIssuesSection(
             }
 
             val openIssues = state.openIssues
-            if (openIssues.isEmpty()) {
+            if (state.seerrInstances.isEmpty()) {
+                Text(
+                    text = mokoString(MR.strings.no_type_instances_message, InstanceType.Seerr.name),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(start = 16.dp, end = 16.dp, top = 2.dp, bottom = 8.dp),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                )
+            } else if (openIssues.isEmpty()) {
                 Text(
                     text = mokoString(MR.strings.no_issues_found),
                     modifier =
@@ -91,6 +106,7 @@ fun DashboardPendingIssuesSection(
                             .fillMaxWidth()
                             .padding(start = 16.dp, end = 16.dp, top = 2.dp, bottom = 8.dp),
                     style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
                 )
             } else {
@@ -140,16 +156,44 @@ private fun CompactIssueCard(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.Top,
             ) {
-                AsyncImage(
-                    model = rememberRemoteImageData(details?.fullPosterPath),
-                    contentDescription = null,
-                    modifier =
-                        Modifier
-                            .width(60.dp)
-                            .aspectRatio(AspectRatio.Poster.ratio)
-                            .clip(MaterialTheme.shapes.medium),
-                    contentScale = ContentScale.Crop,
-                )
+                val posterModel: Any? =
+                    if (details?.fullPosterPath != null) {
+                        rememberRemoteImageData(details.fullPosterPath)
+                    } else {
+                        painterResource(
+                            if (issue.media?.mediaType ==
+                                RequestType.Tv
+                            ) {
+                                MR.images.sonarr_mock_poster
+                            } else {
+                                MR.images.radarr_mock_poster
+                            },
+                        )
+                    }
+
+                if (posterModel is Painter) {
+                    Image(
+                        painter = posterModel,
+                        contentDescription = null,
+                        modifier =
+                            Modifier
+                                .width(60.dp)
+                                .aspectRatio(AspectRatio.Poster.ratio)
+                                .clip(MaterialTheme.shapes.medium),
+                        contentScale = ContentScale.Crop,
+                    )
+                } else {
+                    AsyncImage(
+                        model = posterModel,
+                        contentDescription = null,
+                        modifier =
+                            Modifier
+                                .width(60.dp)
+                                .aspectRatio(AspectRatio.Poster.ratio)
+                                .clip(MaterialTheme.shapes.medium),
+                        contentScale = ContentScale.Crop,
+                    )
+                }
 
                 Column(
                     verticalArrangement = Arrangement.spacedBy(4.dp),

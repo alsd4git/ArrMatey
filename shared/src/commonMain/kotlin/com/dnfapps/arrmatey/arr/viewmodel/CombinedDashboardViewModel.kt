@@ -35,12 +35,17 @@ import com.dnfapps.arrmatey.instances.repository.SeerrInstanceRepository
 import com.dnfapps.arrmatey.instances.repository.TracearrRepository
 import com.dnfapps.arrmatey.model.OperationStatus
 import com.dnfapps.arrmatey.seerr.api.model.ApprovalStatus
+import com.dnfapps.arrmatey.seerr.api.model.DiscoverResult
+import com.dnfapps.arrmatey.seerr.api.model.RequestType
 import com.dnfapps.arrmatey.utils.getNetworkUtils
 import com.dnfapps.networking.NetworkResult
 import dev.shivathapaa.logger.api.Logger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -372,7 +377,7 @@ class CombinedDashboardViewModel(
             initialValue = emptyList(),
         )
 
-    private val activeDownloadsFlow =
+    private val _activeDownloadsFlow =
         downloadsFlow
             .map { downloads ->
                 downloads.queueItems.sortedByDescending { it.progress }
@@ -382,26 +387,62 @@ class CombinedDashboardViewModel(
                 initialValue = emptyList(),
             )
 
+    private val _trendingDiscover = MutableStateFlow<List<com.dnfapps.arrmatey.seerr.api.model.DiscoverResult>>(emptyList())
+    private val _popularMoviesDiscover = MutableStateFlow<List<com.dnfapps.arrmatey.seerr.api.model.DiscoverResult>>(emptyList())
+    private val _popularTvDiscover = MutableStateFlow<List<com.dnfapps.arrmatey.seerr.api.model.DiscoverResult>>(emptyList())
+    private val _upcomingMoviesDiscover = MutableStateFlow<List<com.dnfapps.arrmatey.seerr.api.model.DiscoverResult>>(emptyList())
+    private val _upcomingTvDiscover = MutableStateFlow<List<com.dnfapps.arrmatey.seerr.api.model.DiscoverResult>>(emptyList())
+    private val _quickPickItem = MutableStateFlow<com.dnfapps.arrmatey.seerr.api.model.DiscoverResult?>(null)
+
     init {
         observeDashboard()
+        viewModelScope.launch {
+            instanceManager.instanceRepositories.collect {
+                fetchDiscoverData()
+            }
+        }
         refresh()
+    }
+
+    fun shuffleQuickPick() {
+        val pool =
+            (_trendingDiscover.value + _popularMoviesDiscover.value + _popularTvDiscover.value)
+                .distinctBy { "${it.mediaType.name}_${it.id}" }
+        if (pool.isNotEmpty()) {
+            val current = _quickPickItem.value
+            val available =
+                if (pool.size > 1 && current != null) {
+                    pool.filterNot { it.id == current.id && it.mediaType == current.mediaType }
+                } else {
+                    pool
+                }
+            _quickPickItem.value = available.random()
+        }
     }
 
     private fun observeDashboard() {
         viewModelScope.launch {
             combine(
-                arrInstancesFlow,
-                seerrInstancesFlow,
-                prowlarrInstancesFlow,
-                bazarrInstancesFlow,
-                tracearrInstancesFlow,
-                downloadClientsFlow,
-                recentActivityFlow,
-                recentlyAddedFlow,
-                downloadsFlow.map { it.transferInfo },
-                activeDownloadsFlow,
-                calendarFlow,
-                _isRefreshing,
+                listOf(
+                    arrInstancesFlow,
+                    seerrInstancesFlow,
+                    prowlarrInstancesFlow,
+                    bazarrInstancesFlow,
+                    tracearrInstancesFlow,
+                    downloadClientsFlow,
+                    recentActivityFlow,
+                    recentlyAddedFlow,
+                    downloadsFlow.map { it.transferInfo },
+                    _activeDownloadsFlow,
+                    calendarFlow,
+                    _trendingDiscover,
+                    _popularMoviesDiscover,
+                    _popularTvDiscover,
+                    _upcomingMoviesDiscover,
+                    _upcomingTvDiscover,
+                    _quickPickItem,
+                    _isRefreshing,
+                ),
             ) { args ->
                 @Suppress("UNCHECKED_CAST")
                 val instances = args[0] as List<ArrInstanceDashboardState>
@@ -438,7 +479,24 @@ class CombinedDashboardViewModel(
                 val todayCalendar = calendarPair.first
                 val upcomingCalendar = calendarPair.second
 
-                val refreshing = args[11] as Boolean
+                @Suppress("UNCHECKED_CAST")
+                val trending = args[11] as List<com.dnfapps.arrmatey.seerr.api.model.DiscoverResult>
+
+                @Suppress("UNCHECKED_CAST")
+                val popularMovies = args[12] as List<com.dnfapps.arrmatey.seerr.api.model.DiscoverResult>
+
+                @Suppress("UNCHECKED_CAST")
+                val popularTv = args[13] as List<com.dnfapps.arrmatey.seerr.api.model.DiscoverResult>
+
+                @Suppress("UNCHECKED_CAST")
+                val upcomingMovies = args[14] as List<com.dnfapps.arrmatey.seerr.api.model.DiscoverResult>
+
+                @Suppress("UNCHECKED_CAST")
+                val upcomingTv = args[15] as List<com.dnfapps.arrmatey.seerr.api.model.DiscoverResult>
+
+                val quickPick = args[16] as com.dnfapps.arrmatey.seerr.api.model.DiscoverResult?
+
+                val refreshing = args[17] as Boolean
 
                 CombinedDashboardState.Success(
                     instances = instances,
@@ -453,11 +511,161 @@ class CombinedDashboardViewModel(
                     prowlarrStats = prowlarrStats,
                     bazarrStats = bazarrStats,
                     tracearrStats = tracearrStats,
+                    trendingMedia = trending,
+                    popularMovies = popularMovies,
+                    popularTv = popularTv,
+                    upcomingMovies = upcomingMovies,
+                    upcomingTv = upcomingTv,
+                    quickPickItem = quickPick,
                     networkStatus = resolveNetworkStatus(instances, seerrInstances, prowlarrStats, bazarrStats, downloadClients),
                     isRefreshing = refreshing,
                 )
             }.collect { newState ->
                 _state.value = newState
+            }
+        }
+    }
+
+    private suspend fun enrichDiscoverResult(
+        seerrRepo: SeerrInstanceRepository,
+        item: DiscoverResult,
+    ): DiscoverResult =
+        try {
+            when (item.mediaType) {
+                RequestType.Movie -> {
+                    val detailsRes = seerrRepo.client.getMovieDetails(item.id)
+                    if (detailsRes is NetworkResult.Success) {
+                        val details = detailsRes.data
+                        item.copy(
+                            keywords = details.keywords,
+                            productionCompanies = details.productionCompanies,
+                            contentRating =
+                                details.getCertification("US") ?: details.releases
+                                    ?.results
+                                    ?.firstOrNull()
+                                    ?.rating,
+                        )
+                    } else {
+                        item
+                    }
+                }
+                RequestType.Tv -> {
+                    val detailsRes = seerrRepo.client.getTvDetails(item.id)
+                    if (detailsRes is NetworkResult.Success) {
+                        val details = detailsRes.data
+                        item.copy(
+                            keywords = details.keywords,
+                            productionCompanies = details.productionCompanies,
+                            networks = details.networks,
+                            contentRating =
+                                details.getCertification("US") ?: details.contentRatings
+                                    ?.results
+                                    ?.firstOrNull()
+                                    ?.rating,
+                        )
+                    } else {
+                        item
+                    }
+                }
+                else -> item
+            }
+        } catch (_: Exception) {
+            item
+        }
+
+    private suspend fun fetchDiscoverData() {
+        val seerrRepo = instanceManager.getAllSeerrRepositories().firstOrNull() ?: return
+        try {
+            val trendingRes = seerrRepo.client.getTrending(page = 1)
+            if (trendingRes is NetworkResult.Success) {
+                val enrichedTrending =
+                    coroutineScope {
+                        trendingRes.data.results
+                            .mapIndexed { index, item ->
+                                if (index < 10) {
+                                    async { enrichDiscoverResult(seerrRepo, item) }
+                                } else {
+                                    async { item }
+                                }
+                            }.awaitAll()
+                    }
+                _trendingDiscover.value = enrichedTrending
+            }
+        } catch (e: Exception) {
+            logger.error(e) { "Error fetching trending discover data" }
+        }
+
+        try {
+            val moviesRes = seerrRepo.client.getDiscoverMovies(page = 1)
+            if (moviesRes is NetworkResult.Success) {
+                val enrichedMovies =
+                    coroutineScope {
+                        moviesRes.data.results
+                            .mapIndexed { index, item ->
+                                if (index < 5) {
+                                    async { enrichDiscoverResult(seerrRepo, item) }
+                                } else {
+                                    async { item }
+                                }
+                            }.awaitAll()
+                    }
+                _popularMoviesDiscover.value = enrichedMovies
+            }
+        } catch (e: Exception) {
+            logger.error(e) { "Error fetching popular movies discover data" }
+        }
+
+        try {
+            val tvRes = seerrRepo.client.getDiscoverTv(page = 1)
+            if (tvRes is NetworkResult.Success) {
+                val enrichedTv =
+                    coroutineScope {
+                        tvRes.data.results
+                            .mapIndexed { index, item ->
+                                if (index < 5) {
+                                    async { enrichDiscoverResult(seerrRepo, item) }
+                                } else {
+                                    async { item }
+                                }
+                            }.awaitAll()
+                    }
+                _popularTvDiscover.value = enrichedTv
+            }
+        } catch (e: Exception) {
+            logger.error(e) { "Error fetching popular tv discover data" }
+        }
+
+        val today =
+            Clock.System
+                .now()
+                .toLocalDateTime(TimeZone.currentSystemDefault())
+                .date
+                .toString()
+
+        try {
+            val upcomingMoviesRes = seerrRepo.client.getUpcomingMovies(page = 1, today = today)
+            if (upcomingMoviesRes is NetworkResult.Success) {
+                _upcomingMoviesDiscover.value = upcomingMoviesRes.data.results
+            }
+        } catch (e: Exception) {
+            logger.error(e) { "Error fetching upcoming movies discover data" }
+        }
+
+        try {
+            val upcomingTvRes = seerrRepo.client.getUpcomingTv(page = 1, today = today)
+            if (upcomingTvRes is NetworkResult.Success) {
+                _upcomingTvDiscover.value = upcomingTvRes.data.results
+            }
+        } catch (e: Exception) {
+            logger.error(e) { "Error fetching upcoming tv discover data" }
+        }
+
+        if (_quickPickItem.value == null) {
+            val pool =
+                (_trendingDiscover.value + _popularMoviesDiscover.value + _popularTvDiscover.value)
+                    .distinctBy { "${it.mediaType.name}_${it.id}" }
+            if (pool.isNotEmpty()) {
+                _quickPickItem.value = pool.random()
             }
         }
     }
@@ -583,6 +791,7 @@ class CombinedDashboardViewModel(
                     logger.error(e) { "Error refreshing Seerr instance ${repo.instance.label}" }
                 }
             }
+            fetchDiscoverData()
 
             val prowlarrRepos =
                 instanceManager.instanceRepositories.value.values

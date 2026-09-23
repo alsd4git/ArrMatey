@@ -90,13 +90,13 @@ import com.dnfapps.arrmatey.ui.components.unifiedmedia.menus.UnifiedMediaDetails
 import com.dnfapps.arrmatey.ui.components.unifiedmedia.sheets.AddMediaSheetsHost
 import com.dnfapps.arrmatey.ui.components.unifiedmedia.sheets.EditMediaSheetsHost
 import com.dnfapps.arrmatey.ui.components.unifiedmedia.sheets.SeerrReportIssueSheetHost
-import com.dnfapps.arrmatey.ui.components.unifiedmedia.sheets.SeerrRequestSheetHost
 import com.dnfapps.arrmatey.ui.components.unifiedmedia.sheets.SeerrViewRequestSheetHost
 import com.dnfapps.arrmatey.ui.components.unifiedmedia.tabs.OverviewTabContent
 import com.dnfapps.arrmatey.ui.components.unifiedmedia.tabs.SeasonsFilesTabContent
 import com.dnfapps.arrmatey.ui.helpers.LocalFloatingBarBottomPadding
 import com.dnfapps.arrmatey.ui.helpers.LocalIsInTwoPane
 import com.dnfapps.arrmatey.ui.screens.tracearr.TracearrStreamDetailsSheet
+import com.dnfapps.arrmatey.ui.sheets.MediaRequestOrAddSheet
 import com.dnfapps.arrmatey.ui.tabs.ConfirmDeleteItemSheet
 import com.dnfapps.arrmatey.ui.tabs.QueueItemInfoSheet
 import com.dnfapps.arrmatey.ui.theme.ArrOrange
@@ -379,9 +379,7 @@ fun UnifiedMediaDetailsScreen(
                             onViewRequestClicked = { viewModel.showViewRequestSheet() },
                             onApproveRequestClicked = { viewModel.showViewRequestSheet() },
                             onDeclineRequestClicked = { viewModel.declineRequest(it) },
-                            onRequestClicked = { viewModel.showRequestSheet(is4k = false) },
-                            onRequest4kClicked = { viewModel.showRequestSheet(is4k = true) },
-                            onAddDirectlyClicked = { showAddSheet = true },
+                            onAddClicked = { showAddSheet = true },
                         )
 
                         if (resolvedType != null && success.availableInstances.size > 1) {
@@ -684,26 +682,34 @@ fun UnifiedMediaDetailsScreen(
                 }
             }
             lastSuccessState?.let { state ->
-                val isRequest4k by viewModel.isRequest4k.collectAsStateWithLifecycle()
-                SeerrRequestSheetHost(
-                    visible = isRequestSheetVisible,
-                    details = state.seerrMedia,
-                    serviceDetails = serviceDetails,
-                    currentUser = currentUser,
-                    users = users,
-                    requestInProgress = requestStatus is OperationStatus.InProgress,
-                    onSubmitRequest = { profileId, rootFolder, langId, seasons, userId ->
-                        viewModel.submitRequest(
-                            profileId,
-                            rootFolder,
-                            langId,
-                            seasons,
-                            is4k = isRequest4k,
-                            userId = userId,
-                        )
-                    },
-                    onDismiss = { viewModel.hideRequestSheet() },
-                )
+                if ((showAddSheet || isRequestSheetVisible) && state.isMovieOrTv) {
+                    MediaRequestOrAddSheet(
+                        onDismiss = {
+                            showAddSheet = false
+                            viewModel.hideRequestSheet()
+                        },
+                        viewModel = viewModel,
+                    )
+                } else if (showAddSheet) {
+                    AddMediaSheetsHost(
+                        visible = true,
+                        state = state,
+                        addSheetUiState = addSheetUiState,
+                        qualityProfiles = qualityProfiles,
+                        rootFolders = rootFolders,
+                        tags = tags,
+                        addItemStatus = addItemStatus,
+                        preferences = preferences,
+                        onInstanceSelected = { viewModel.setAddSheetTargetInstance(it) },
+                        onSmartAdd = { newItem, searchOnAdd, targetInstId ->
+                            viewModel.smartAdd(newItem, searchOnAdd, targetInstId)
+                        },
+                        onUpdatePreferences = viewModel::updatePreferences,
+                        onDismiss = { showAddSheet = false },
+                        canSwitchToRequest = false,
+                        instanceTypeName = viewModel.resolvedInstanceType?.name,
+                    )
+                }
 
                 SeerrReportIssueSheetHost(
                     visible = isReportIssueSheetVisible,
@@ -715,22 +721,6 @@ fun UnifiedMediaDetailsScreen(
                     onReset = { viewModel.resetIssueState() },
                     onSubmit = { viewModel.submitIssue() },
                     onDismiss = { viewModel.hideReportIssueSheet() },
-                )
-                AddMediaSheetsHost(
-                    visible = showAddSheet,
-                    state = state,
-                    addSheetUiState = addSheetUiState,
-                    qualityProfiles = qualityProfiles,
-                    rootFolders = rootFolders,
-                    tags = tags,
-                    addItemStatus = addItemStatus,
-                    preferences = preferences,
-                    onInstanceSelected = { viewModel.setAddSheetTargetInstance(it) },
-                    onSmartAdd = { newItem, searchOnAdd, targetInstId ->
-                        viewModel.smartAdd(newItem, searchOnAdd, targetInstId)
-                    },
-                    onUpdatePreferences = viewModel::updatePreferences,
-                    onDismiss = { showAddSheet = false },
                 )
 
                 SeerrViewRequestSheetHost(
