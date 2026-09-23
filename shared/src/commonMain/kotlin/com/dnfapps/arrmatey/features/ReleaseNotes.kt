@@ -84,6 +84,12 @@ object ReleaseNotes {
                 title = MR.strings.v13_title,
                 androidContentFile = MR.files.release_0_9_3_txt,
             ),
+            FeatureUpdate(
+                buildCode = 16,
+                version = "0.10.0",
+                title = MR.strings.v14_title,
+                androidContentFile = MR.files.release_0_10_0_txt,
+            ),
         ).sortedByDescending { it.buildCode }
 
     val latestUpdate = updates.maxBy { it.buildCode }

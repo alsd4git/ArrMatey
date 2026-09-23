@@ -28,27 +28,30 @@
 ### Combined Dashboard
 - Centralized overview of all instances, download clients, and requests
 - Customizable layout: add, remove, and reorder cards to fit your workflow
-- Dashboard cards for Universal Search, Seerr Requests, and Seerr Issues
+- Dashboard cards for Universal Search, Seerr Requests, Seerr Issues, and Discover Cards (Discover Feed, Quick Pick, Spotlight)
+- Tracearr Active Streams card for real-time stream monitoring and statistics
 - Real-time network status and detailed disk space monitoring
 - Quick-access shortcuts to your recently added media and upcoming schedule
 
 ### Multi-Instance Support
 - Manage multiple Sonarr, Radarr, Lidarr, Bookshelf, and Listenarr instances
-- Seamless integration with Prowlarr for indexer management, Seerr for requests and issues, and Bazarr for subtitles
+- Seamless integration with Prowlarr for indexer management, Seerr for requests and issues, Bazarr for subtitles, and Tracearr for stream monitoring
 - Quick instance switching and custom instance labels
 - Live presence detection showing which instances contain a media item
 
 ### Unified Media Details
 - Blends Arr library data, Seerr metadata, and Bazarr subtitle controls into a single cohesive view
-- **Instance Switching**: View media presence across multiple instances and switch between them instantly
+- **Instance Switching**: View media presence across multiple instances and switch between them instantly while preserving local instance context
 - **Smart Add & Requests**: Add media directly to any configured Arr instance or submit custom Seerr requests with custom profiles, root folders, and tags
-- **Seasons & Episodes**: Full episode monitoring, release search, and integrated Bazarr subtitle tracking
+- **Seasons & Episodes**: Full episode monitoring, release search, playback statistics, and integrated Bazarr subtitle tracking
 - **Cast & Crew Filmography**: Browse actor and crew credits with one-tap navigation to detailed filmographies
+- **Similar Recommendations**: Browse similar media suggestions directly on media detail pages
 - **Information & Keywords**: Distinct metadata cards with instance indicators and staggered keyword tags
 
 ### Discover & Requests (Seerr)
 - Dedicated Discover tab to browse trending, popular, and upcoming movies and TV shows
 - Search across movies, shows, and people with full credit filmography and backdrop previews
+- Filter search results by instance, media type, status, and monitoring state
 - Submit requests, view pending requests, and manage media issues directly in the app
 
 ### Library Management
@@ -82,7 +85,9 @@
 - Manage downloads with options to remove, blocklist, or skip redownload
 
 ### Advanced Features
-- **Android App Shortcuts**: Jump to services or search directly from your home screen
+- **Floating Navigation Bar**: Modern floating navigation bar option for clean, fluid screen transitions
+- **Interactive Onboarding**: Guided setup wizard to configure your initial instances and app preferences
+- **Android App Shortcuts & Monochrome Icon**: Jump to services directly from your home screen with Material You icon support
 - **Local Network Switching**: Automatically use local URLs when connected to home Wi-Fi
 - **Large Screen & Adaptive Layouts**: Responsive dual-panel layouts for tablets and large screens
 - **Custom Webpages**: Pin your favorite status pages or secondary dashboards (like Tautulli) directly in the app
@@ -97,6 +102,8 @@
 - **Multiple Integrations**: Support for Transmission, Deluge, qBittorrent, and SABnzbd
 
 ## Screenshots
+
+> **Note for Release 0.10.0**: Screenshots marked below with `[Needs Replacement]` or `[Needs Addition]` should be updated with new assets representing 0.10.0 features (Discover Dashboard Cards, Tracearr Active Streams, Floating Navigation Bar, and Onboarding).
 
 ### Dashboard
 <table>
@@ -279,6 +286,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Prowlarr](https://prowlarr.com/) - Indexer manager
 - [Seerr](https://docs.seerr.dev/) - Request management
 - [Bazarr](https://www.bazarr.media/) - Subtitle management for Sonarr and Radarr
+- [Tracearr](https://github.com/Tracearr/Tracearr) - Active stream monitoring and playback analytics
 - [Material Design 3](https://m3.material.io/) - Design system
 - [Jetpack Compose](https://developer.android.com/jetpack/compose) - Modern UI toolkit
 - [SwiftUI](https://developer.apple.com/xcode/swiftui/) - Apple's declarative framework for building user interfaces

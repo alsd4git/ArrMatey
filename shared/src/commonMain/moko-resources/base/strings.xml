@@ -847,6 +847,7 @@
     <string name="v11_title">0.9.1</string>
     <string name="v12_title">Labour Day Bug Squashing</string>
     <string name="v13_title">Hotfix</string>
+    <string name="v14_title">Discover &amp; Dashboard Evolution</string>
 
     <!-- Backup & Restore -->
     <string name="backup_restore">Backup &amp; Restore</string>
