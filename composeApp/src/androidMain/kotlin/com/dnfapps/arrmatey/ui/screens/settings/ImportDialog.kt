@@ -38,6 +38,7 @@ fun ImportDialog(
     onPasswordChanged: (String) -> Unit,
     onToggleInstanceSelection: (Int) -> Unit,
     onToggleDownloadClientSelection: (Int) -> Unit,
+    onToggleCustomWebpageSelection: (Int) -> Unit,
     onToggleImportTabPreferences: () -> Unit,
     onToggleImportUiPreferences: () -> Unit,
 ) {
@@ -128,6 +129,32 @@ fun ImportDialog(
                     }
                 }
 
+                if (importState.decryptedBackup?.customWebpages?.isNotEmpty() == true) {
+                    if (importState.decryptedBackup?.instances?.isNotEmpty() == true ||
+                        importState.decryptedBackup?.downloadClients?.isNotEmpty() == true
+                    ) {
+                        HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
+                    }
+                    Text(
+                        text = mokoString(MR.strings.custom_webpages),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                    ContainerCard(
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+                        contentPadding = PaddingValues(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        importState.decryptedBackup?.customWebpages?.forEachIndexed { index, webpage ->
+                            LabelledCheckbox(
+                                label = webpage.name,
+                                checked = importState.selectedCustomWebpageIndices.contains(index),
+                                onCheckedChange = { onToggleCustomWebpageSelection(index) },
+                            )
+                        }
+                    }
+                }
+
                 if (importState.decryptedBackup?.globalPreferences != null) {
                     HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
                     Text(
@@ -178,7 +205,8 @@ fun ImportDialog(
                     Button(
                         enabled =
                             importState.selectedInstanceIndices.isNotEmpty() ||
-                                importState.selectedDownloadClientIndices.isNotEmpty(),
+                                importState.selectedDownloadClientIndices.isNotEmpty() ||
+                                importState.selectedCustomWebpageIndices.isNotEmpty(),
                         onClick = onConfirmImport,
                         modifier = Modifier.fillMaxWidth(),
                     ) {

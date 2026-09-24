@@ -40,6 +40,7 @@ fun ExportDialog(
     onToggleIncludeUiPreferences: () -> Unit,
     onToggleInstanceSelection: (Long) -> Unit,
     onToggleDownloadClientSelection: (Long) -> Unit,
+    onToggleCustomWebpageSelection: (Long) -> Unit,
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -96,7 +97,10 @@ fun ExportDialog(
                 )
             }
 
-            if (exportState.instances.isNotEmpty() || exportState.downloadClients.isNotEmpty()) {
+            if (exportState.instances.isNotEmpty() ||
+                exportState.downloadClients.isNotEmpty() ||
+                exportState.customWebpages.isNotEmpty()
+            ) {
                 HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
                 Text(
@@ -126,6 +130,27 @@ fun ExportDialog(
                     }
                 }
 
+                if (exportState.customWebpages.isNotEmpty()) {
+                    Text(
+                        text = mokoString(MR.strings.custom_webpages),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                    ContainerCard(
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLow),
+                        contentPadding = PaddingValues(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        exportState.customWebpages.forEach { webpage ->
+                            LabelledCheckbox(
+                                label = webpage.name,
+                                checked = exportState.selectedCustomWebpageIds.contains(webpage.id),
+                                onCheckedChange = { onToggleCustomWebpageSelection(webpage.id) },
+                            )
+                        }
+                    }
+                }
+
                 if (exportState.downloadClients.isNotEmpty()) {
                     Text(
                         text = mokoString(MR.strings.download_clients),
@@ -147,7 +172,6 @@ fun ExportDialog(
                     }
                 }
             }
-
             Column(
                 verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
@@ -155,7 +179,9 @@ fun ExportDialog(
                 Button(
                     enabled =
                         exportState.password.isNotBlank() &&
-                            (exportState.selectedInstanceIds.isNotEmpty() || exportState.selectedDownloadClientIds.isNotEmpty()),
+                            (exportState.selectedInstanceIds.isNotEmpty() ||
+                                exportState.selectedDownloadClientIds.isNotEmpty() ||
+                                exportState.selectedCustomWebpageIds.isNotEmpty()),
                     onClick = onConfirm,
                     modifier = Modifier.fillMaxWidth(),
                 ) {

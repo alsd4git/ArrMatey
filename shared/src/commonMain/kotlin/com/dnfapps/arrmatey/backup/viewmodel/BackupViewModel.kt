@@ -8,9 +8,11 @@ import com.dnfapps.arrmatey.backup.usecase.ExportDataUseCase
 import com.dnfapps.arrmatey.backup.usecase.ImportDataUseCase
 import com.dnfapps.arrmatey.database.dao.InstanceDao
 import com.dnfapps.arrmatey.downloadclient.database.DownloadClientDao
+import com.dnfapps.arrmatey.webpage.repository.CustomWebpageRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -19,6 +21,7 @@ class BackupViewModel(
     private val importDataUseCase: ImportDataUseCase,
     private val instanceDao: InstanceDao,
     private val downloadClientDao: DownloadClientDao,
+    private val customWebpageRepository: CustomWebpageRepository,
 ) : ViewModel() {
     private val _exportUiState = MutableStateFlow(ExportUiState())
     val exportUiState: StateFlow<ExportUiState> = _exportUiState.asStateFlow()
@@ -34,12 +37,15 @@ class BackupViewModel(
         viewModelScope.launch {
             val instances = instanceDao.getAllInstances()
             val downloadClients = downloadClientDao.getAllDownloadClients()
+            val customWebpages = customWebpageRepository.getAllWebpages().first()
             _exportUiState.update {
                 it.copy(
                     instances = instances,
                     downloadClients = downloadClients,
+                    customWebpages = customWebpages,
                     selectedInstanceIds = instances.map { i -> i.id }.toSet(),
                     selectedDownloadClientIds = downloadClients.map { c -> c.id }.toSet(),
+                    selectedCustomWebpageIds = customWebpages.map { w -> w.id }.toSet(),
                 )
             }
         }
@@ -58,6 +64,14 @@ class BackupViewModel(
             val newSelected = state.selectedDownloadClientIds.toMutableSet()
             if (newSelected.contains(id)) newSelected.remove(id) else newSelected.add(id)
             state.copy(selectedDownloadClientIds = newSelected)
+        }
+    }
+
+    fun toggleCustomWebpageSelection(id: Long) {
+        _exportUiState.update { state ->
+            val newSelected = state.selectedCustomWebpageIds.toMutableSet()
+            if (newSelected.contains(id)) newSelected.remove(id) else newSelected.add(id)
+            state.copy(selectedCustomWebpageIds = newSelected)
         }
     }
 
@@ -88,6 +102,7 @@ class BackupViewModel(
                     password = state.password,
                     selectedInstanceIds = state.selectedInstanceIds,
                     selectedDownloadClientIds = state.selectedDownloadClientIds,
+                    selectedCustomWebpageIds = state.selectedCustomWebpageIds,
                     includeInstancePreferences = state.includeInstancePreferences,
                     includeTabPreferences = state.includeTabPreferences,
                     includeUiPreferences = state.includeUiPreferences,
@@ -114,6 +129,7 @@ class BackupViewModel(
                         decryptedBackup = backup,
                         selectedInstanceIndices = backup.instances.indices.toSet(),
                         selectedDownloadClientIndices = backup.downloadClients.indices.toSet(),
+                        selectedCustomWebpageIndices = backup.customWebpages.indices.toSet(),
                         error = null,
                     )
                 }
@@ -139,6 +155,14 @@ class BackupViewModel(
         }
     }
 
+    fun toggleImportCustomWebpageSelection(index: Int) {
+        _importUiState.update { state ->
+            val newSelected = state.selectedCustomWebpageIndices.toMutableSet()
+            if (newSelected.contains(index)) newSelected.remove(index) else newSelected.add(index)
+            state.copy(selectedCustomWebpageIndices = newSelected)
+        }
+    }
+
     fun toggleImportTabPreferences() {
         _importUiState.update { it.copy(importTabPreferences = !it.importTabPreferences) }
     }
@@ -157,6 +181,7 @@ class BackupViewModel(
                 backup = backup,
                 selectedInstanceIndices = state.selectedInstanceIndices,
                 selectedDownloadClientIndices = state.selectedDownloadClientIndices,
+                selectedCustomWebpageIndices = state.selectedCustomWebpageIndices,
                 importTabPreferences = state.importTabPreferences,
                 importUiPreferences = state.importUiPreferences,
             )

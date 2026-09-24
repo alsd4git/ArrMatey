@@ -1,6 +1,9 @@
 package com.dnfapps.arrmatey.backup.usecase
 
 import com.dnfapps.arrmatey.backup.TransportEncryptor
+import com.dnfapps.arrmatey.backup.model.BackupExport
+import com.dnfapps.arrmatey.backup.model.CustomWebpageExport
+import com.dnfapps.arrmatey.database.dao.CustomWebpageDao
 import com.dnfapps.arrmatey.database.dao.InstanceDao
 import com.dnfapps.arrmatey.datastore.DataStoreFactory
 import com.dnfapps.arrmatey.datastore.InstancePreferenceStoreRepository
@@ -9,8 +12,12 @@ import com.dnfapps.arrmatey.downloadclient.database.DownloadClientDao
 import com.dnfapps.arrmatey.downloadclient.model.DownloadClient
 import com.dnfapps.arrmatey.instances.model.Instance
 import com.dnfapps.arrmatey.instances.model.InstanceType
+import com.dnfapps.arrmatey.webpage.model.CustomWebpage
+import com.dnfapps.arrmatey.webpage.repository.CustomWebpageRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -117,6 +124,25 @@ class ImportDataUseCaseTest {
             override suspend fun ensureFirstSelectedIfNone() {}
         }
 
+    private val dummyCustomWebpageDao =
+        object : CustomWebpageDao {
+            override fun getAllWebpages(): Flow<List<CustomWebpage>> = emptyFlow()
+
+            override suspend fun getWebpageById(id: Long): CustomWebpage? = null
+
+            override fun observeWebpageById(id: Long): Flow<CustomWebpage?> = emptyFlow()
+
+            override suspend fun insert(webpage: CustomWebpage): Long = 0
+
+            override suspend fun update(webpage: CustomWebpage): Int = 0
+
+            override suspend fun delete(webpage: CustomWebpage) {}
+
+            override suspend fun deleteById(id: Long) {}
+        }
+
+    private val customWebpageRepository = CustomWebpageRepository(dummyCustomWebpageDao)
+
     private val dataStoreFactory = DataStoreFactory()
 
     @Test
@@ -149,6 +175,7 @@ class ImportDataUseCaseTest {
                 downloadClientDao = dummyDownloadClientDao,
                 instancePreferenceStoreRepository = InstancePreferenceStoreRepository(dataStoreFactory),
                 preferencesStore = PreferencesStore(dataStoreFactory),
+                customWebpageRepository = customWebpageRepository,
                 transportEncryptor = fakeEncryptor,
                 json = json,
             )
@@ -156,6 +183,8 @@ class ImportDataUseCaseTest {
         val result = importDataUseCase.decryptBackup(legacyJsonBackup, "password")
 
         assertNotNull(result)
+        assertEquals(1, result.version)
+        assertEquals(0, result.customWebpages.size)
         assertEquals(1, result.instances.size)
         assertEquals(InstanceType.Bookshelf, result.instances.first().type)
         assertEquals("My Books", result.instances.first().label)
@@ -191,6 +220,7 @@ class ImportDataUseCaseTest {
                 downloadClientDao = dummyDownloadClientDao,
                 instancePreferenceStoreRepository = InstancePreferenceStoreRepository(dataStoreFactory),
                 preferencesStore = PreferencesStore(dataStoreFactory),
+                customWebpageRepository = customWebpageRepository,
                 transportEncryptor = fakeEncryptor,
                 json = json,
             )
@@ -202,4 +232,134 @@ class ImportDataUseCaseTest {
         assertEquals(InstanceType.Bookshelf, result.instances.first().type)
         assertEquals("My Books 2", result.instances.first().label)
     }
+
+    @Test
+    fun testDecryptBackupWithCustomWebpage() {
+        val backupJson =
+            """
+            {
+                "version": 2,
+                "instances": [],
+                "downloadClients": [],
+                "customWebpages": [
+                    {
+                        "id": 42,
+                        "name": "Status",
+                        "url": "https://status.example.com",
+                        "headers": [
+                            {
+                                "key": "Authorization",
+                                "value": "Bearer test"
+                            }
+                        ]
+                    }
+                ]
+            }
+            """.trimIndent()
+
+        val importDataUseCase =
+            ImportDataUseCase(
+                instanceDao = dummyInstanceDao,
+                downloadClientDao = dummyDownloadClientDao,
+                instancePreferenceStoreRepository = InstancePreferenceStoreRepository(dataStoreFactory),
+                preferencesStore = PreferencesStore(dataStoreFactory),
+                customWebpageRepository = customWebpageRepository,
+                transportEncryptor = fakeEncryptor,
+                json = json,
+            )
+
+        val result = importDataUseCase.decryptBackup(backupJson, "password")
+
+        assertEquals(2, result.version)
+        assertEquals(1, result.customWebpages.size)
+        val webpage = result.customWebpages.first()
+        assertEquals(42L, webpage.id)
+        assertEquals("Status", webpage.name)
+        assertEquals("https://status.example.com", webpage.url)
+        assertEquals(1, webpage.headers.size)
+        assertEquals("Authorization", webpage.headers.first().key)
+        assertEquals("Bearer test", webpage.headers.first().value)
+    }
+
+    @Test
+    fun testImportSameNameDifferentUrlDoesNotOverwriteExistingWebpage() =
+        runTest {
+            val existing =
+                CustomWebpage(
+                    id = 5L,
+                    name = "Status",
+                    url = "https://local.example.com",
+                )
+            val webpages = MutableStateFlow(listOf(existing))
+            val webpageDao =
+                object : CustomWebpageDao {
+                    override fun getAllWebpages(): Flow<List<CustomWebpage>> = webpages
+
+                    override suspend fun getWebpageById(id: Long): CustomWebpage? =
+                        webpages.value.firstOrNull { it.id == id }
+
+                    override fun observeWebpageById(id: Long): Flow<CustomWebpage?> = emptyFlow()
+
+                    override suspend fun insert(webpage: CustomWebpage): Long {
+                        val id = (webpages.value.maxOfOrNull { it.id } ?: 0L) + 1L
+                        webpages.value = webpages.value + webpage.copy(id = id)
+                        return id
+                    }
+
+                    override suspend fun update(webpage: CustomWebpage): Int {
+                        val index = webpages.value.indexOfFirst { it.id == webpage.id }
+                        if (index < 0) return 0
+                        webpages.value = webpages.value.toMutableList().also { it[index] = webpage }
+                        return 1
+                    }
+
+                    override suspend fun delete(webpage: CustomWebpage) {
+                        webpages.value = webpages.value.filterNot { it.id == webpage.id }
+                    }
+
+                    override suspend fun deleteById(id: Long) {
+                        webpages.value = webpages.value.filterNot { it.id == id }
+                    }
+                }
+
+            val importDataUseCase =
+                ImportDataUseCase(
+                    instanceDao = dummyInstanceDao,
+                    downloadClientDao = dummyDownloadClientDao,
+                    instancePreferenceStoreRepository = InstancePreferenceStoreRepository(dataStoreFactory),
+                    preferencesStore = PreferencesStore(dataStoreFactory),
+                    customWebpageRepository = CustomWebpageRepository(webpageDao),
+                    transportEncryptor = fakeEncryptor,
+                    json = json,
+                )
+
+            val backup =
+                BackupExport(
+                    version = 2,
+                    customWebpages =
+                        listOf(
+                            CustomWebpageExport(
+                                id = 42L,
+                                name = "Status",
+                                url = "https://backup.example.com",
+                            ),
+                        ),
+                )
+
+            importDataUseCase.importSelected(
+                backup = backup,
+                selectedInstanceIndices = emptySet(),
+                selectedDownloadClientIndices = emptySet(),
+                selectedCustomWebpageIndices = setOf(0),
+                importTabPreferences = false,
+                importUiPreferences = false,
+            )
+
+            assertEquals(2, webpages.value.size)
+            assertEquals("https://local.example.com", webpages.value.first { it.id == 5L }.url)
+            assertEquals(
+                "https://backup.example.com",
+                webpages.value.first { it.id != 5L }.url,
+            )
+        }
 }

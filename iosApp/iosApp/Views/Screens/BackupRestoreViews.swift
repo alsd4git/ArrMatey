@@ -57,7 +57,22 @@ struct ExportSheet: View {
                             ))
                         }
                     }
-                    
+
+
+                    if !viewModel.exportState.customWebpages.isEmpty {
+                        Text(MR.strings().custom_webpages.localized())
+                            .font(.caption)
+                            .foregroundColor(.themePrimary)
+                            .padding(.top, 8)
+
+                        ForEach(viewModel.exportState.customWebpages, id: \.id) { webpage in
+                            Toggle(webpage.name, isOn: Binding(
+                                get: { viewModel.exportState.selectedCustomWebpageIds.contains(webpage.id.asKotlinLong) },
+                                set: { _ in viewModel.toggleCustomWebpageSelection(id: webpage.id) }
+                            ))
+                        }
+                    }
+
                     if !viewModel.exportState.downloadClients.isEmpty {
                         Text(MR.strings().download_clients.localized())
                             .font(.caption)
@@ -88,7 +103,7 @@ struct ExportSheet: View {
                             isPresented = false
                         }
                     }
-                    .disabled(viewModel.exportState.password.isEmpty || (viewModel.exportState.selectedInstanceIds.isEmpty && viewModel.exportState.selectedDownloadClientIds.isEmpty))
+                    .disabled(viewModel.exportState.password.isEmpty || (viewModel.exportState.selectedInstanceIds.isEmpty && viewModel.exportState.selectedDownloadClientIds.isEmpty && viewModel.exportState.selectedCustomWebpageIds.isEmpty))
                 }
             }
         }
@@ -149,7 +164,22 @@ struct ImportSheet: View {
                                     ))
                                 }
                             }
-                            
+
+
+                            if !backup.customWebpages.isEmpty {
+                                Text(MR.strings().custom_webpages.localized())
+                                    .font(.caption)
+                                    .foregroundColor(.themePrimary)
+                                    .padding(.top, 8)
+
+                                ForEach(Array(backup.customWebpages.enumerated()), id: \.offset) { index, webpage in
+                                    Toggle(webpage.name, isOn: Binding(
+                                        get: { viewModel.importState.selectedCustomWebpageIndices.contains(Int32(index).asKotlinInt) },
+                                        set: { _ in viewModel.toggleImportCustomWebpageSelection(index: Int32(index)) }
+                                    ))
+                                }
+                            }
+
                             if backup.globalPreferences != nil {
                                 Text(MR.strings().backup_restore.localized())
                                     .font(.caption)
@@ -195,7 +225,7 @@ struct ImportSheet: View {
                                 isPresented = false
                             }
                         }
-                        .disabled(viewModel.importState.selectedInstanceIndices.isEmpty && viewModel.importState.selectedDownloadClientIndices.isEmpty)
+                        .disabled(viewModel.importState.selectedInstanceIndices.isEmpty && viewModel.importState.selectedDownloadClientIndices.isEmpty && viewModel.importState.selectedCustomWebpageIndices.isEmpty)
                     }
                 }
             }

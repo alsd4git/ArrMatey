@@ -3,6 +3,7 @@ package com.dnfapps.arrmatey.backup.usecase
 import com.dnfapps.arrmatey.backup.TransportEncryptor
 import com.dnfapps.arrmatey.backup.model.BackupExport
 import com.dnfapps.arrmatey.database.EncryptedString
+import com.dnfapps.arrmatey.database.dao.InsertResult
 import com.dnfapps.arrmatey.database.dao.InstanceDao
 import com.dnfapps.arrmatey.datastore.InstancePreferenceStoreRepository
 import com.dnfapps.arrmatey.datastore.PreferencesStore
@@ -10,6 +11,9 @@ import com.dnfapps.arrmatey.downloadclient.database.DownloadClientDao
 import com.dnfapps.arrmatey.downloadclient.model.DownloadClient
 import com.dnfapps.arrmatey.instances.model.Instance
 import com.dnfapps.arrmatey.instances.model.InstanceType
+import com.dnfapps.arrmatey.webpage.model.CustomWebpage
+import com.dnfapps.arrmatey.webpage.repository.CustomWebpageRepository
+import kotlinx.coroutines.flow.first
 import kotlinx.serialization.json.Json
 
 class ImportDataUseCase(
@@ -17,6 +21,7 @@ class ImportDataUseCase(
     private val downloadClientDao: DownloadClientDao,
     private val instancePreferenceStoreRepository: InstancePreferenceStoreRepository,
     private val preferencesStore: PreferencesStore,
+    private val customWebpageRepository: CustomWebpageRepository,
     private val transportEncryptor: TransportEncryptor,
     private val json: Json,
 ) {
@@ -40,6 +45,7 @@ class ImportDataUseCase(
         backup: BackupExport,
         selectedInstanceIndices: Set<Int>,
         selectedDownloadClientIndices: Set<Int>,
+        selectedCustomWebpageIndices: Set<Int>,
         importTabPreferences: Boolean,
         importUiPreferences: Boolean,
     ) {
@@ -146,9 +152,69 @@ class ImportDataUseCase(
             }
         }
 
+        val webpageIdMap = mutableMapOf<Long, Long>()
+        if (selectedCustomWebpageIndices.isNotEmpty()) {
+            val existingWebpages = customWebpageRepository.getAllWebpages().first().toMutableList()
+            backup.customWebpages.forEachIndexed { index, export ->
+                if (index in selectedCustomWebpageIndices) {
+                    val imported =
+                        CustomWebpage(
+                            name = export.name,
+                            url = export.url,
+                            headers = export.headers,
+                        )
+                    val existing = existingWebpages.firstOrNull { it.url == export.url }
+
+                    val result =
+                        if (existing != null) {
+                            customWebpageRepository.updateWebpage(imported.copy(id = existing.id))
+                        } else {
+                            customWebpageRepository.addWebpage(imported)
+                        }
+                    val localId =
+                        when (result) {
+                            is InsertResult.Success -> result.id
+                            is InsertResult.Conflict -> 0L
+                            is InsertResult.Error -> 0L
+                        }
+
+                    if (localId > 0L) {
+                        webpageIdMap[export.id] = localId
+                        existingWebpages.removeAll { it.id == localId }
+                        existingWebpages.add(imported.copy(id = localId))
+                    }
+                }
+            }
+        }
+
         backup.globalPreferences?.let { global ->
             if (importTabPreferences) {
-                global.tabPreferences?.let { preferencesStore.saveTabPreferences(it) }
+                global.tabPreferences?.let { tabPreferences ->
+                    val selectedBackupIds =
+                        selectedCustomWebpageIndices.mapNotNull { backup.customWebpages.getOrNull(it)?.id }.toSet()
+
+                    fun remap(keys: List<String>): List<String> =
+                        keys.mapNotNull { key ->
+                            if (!key.startsWith("webpage_")) {
+                                key
+                            } else {
+                                val backupId = key.removePrefix("webpage_").toLongOrNull()
+                                when {
+                                    backupId == null -> key
+                                    backupId in selectedBackupIds -> webpageIdMap[backupId]?.let { "webpage_$it" }
+                                    else -> null
+                                }
+                            }
+                        }
+
+                    preferencesStore.saveTabPreferences(
+                        tabPreferences.copy(
+                            orderedVisibleKeys = remap(tabPreferences.orderedVisibleKeys),
+                            orderedHiddenKeys = remap(tabPreferences.orderedHiddenKeys),
+                            orderedRemovedKeys = remap(tabPreferences.orderedRemovedKeys),
+                        ),
+                    )
+                }
             }
             if (importUiPreferences) {
                 global.useServiceNavLogos?.let { preferencesStore.setUseServiceNavLogos(it) }

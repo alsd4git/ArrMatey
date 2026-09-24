@@ -2,6 +2,7 @@ package com.dnfapps.arrmatey.backup.usecase
 
 import com.dnfapps.arrmatey.backup.TransportEncryptor
 import com.dnfapps.arrmatey.backup.model.BackupExport
+import com.dnfapps.arrmatey.backup.model.CustomWebpageExport
 import com.dnfapps.arrmatey.backup.model.DownloadClientExport
 import com.dnfapps.arrmatey.backup.model.GlobalPreferencesExport
 import com.dnfapps.arrmatey.backup.model.InstanceExport
@@ -9,6 +10,7 @@ import com.dnfapps.arrmatey.database.dao.InstanceDao
 import com.dnfapps.arrmatey.datastore.InstancePreferenceStoreRepository
 import com.dnfapps.arrmatey.datastore.PreferencesStore
 import com.dnfapps.arrmatey.downloadclient.database.DownloadClientDao
+import com.dnfapps.arrmatey.webpage.repository.CustomWebpageRepository
 import kotlinx.coroutines.flow.first
 import kotlinx.serialization.json.Json
 
@@ -17,6 +19,7 @@ class ExportDataUseCase(
     private val downloadClientDao: DownloadClientDao,
     private val instancePreferenceStoreRepository: InstancePreferenceStoreRepository,
     private val preferencesStore: PreferencesStore,
+    private val customWebpageRepository: CustomWebpageRepository,
     private val transportEncryptor: TransportEncryptor,
     private val json: Json,
 ) {
@@ -24,6 +27,7 @@ class ExportDataUseCase(
         password: String,
         selectedInstanceIds: Set<Long>,
         selectedDownloadClientIds: Set<Long>,
+        selectedCustomWebpageIds: Set<Long>,
         includeInstancePreferences: Boolean,
         includeTabPreferences: Boolean,
         includeUiPreferences: Boolean,
@@ -85,6 +89,20 @@ class ExportDataUseCase(
                 )
             }
 
+        val customWebpageExports =
+            customWebpageRepository
+                .getAllWebpages()
+                .first()
+                .filter { it.id in selectedCustomWebpageIds }
+                .map { webpage ->
+                    CustomWebpageExport(
+                        id = webpage.id,
+                        name = webpage.name,
+                        url = webpage.url,
+                        headers = webpage.headers,
+                    )
+                }
+
         val globalPreferences =
             if (includeTabPreferences || includeUiPreferences) {
                 GlobalPreferencesExport(
@@ -98,8 +116,10 @@ class ExportDataUseCase(
 
         val backup =
             BackupExport(
+                version = 2,
                 instances = instanceExports,
                 downloadClients = downloadClientExports,
+                customWebpages = customWebpageExports,
                 globalPreferences = globalPreferences,
             )
 
