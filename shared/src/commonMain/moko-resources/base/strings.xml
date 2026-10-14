@@ -81,8 +81,8 @@
     <string name="combine_seerr_arr_media_description">When enabled, the media details screen will combine information from Seerr and your Arr services. If disabled, details will only display data based on the context.</string>
     <string name="bazarr_details_integration_title">Bazarr Subtitles Integration</string>
     <string name="bazarr_details_integration_description">Display subtitle information and management options from Bazarr in media and episode details.</string>
-    <string name="tracearr_details_integration_title">Tracearr Integration</string>
-    <string name="tracearr_details_integration_description">Display playback statistics, viewer history, and active streams from Tracearr in media details.</string>
+    <string name="tracearr_details_integration_title">Tracearr/Tautulli Integration</string>
+    <string name="tracearr_details_integration_description">Display playback statistics, viewer history, and active streams from Tracearr and Tautulli in media details.</string>
     <string name="always_ask">Always Ask</string>
     <string name="appearance">Appearance</string>
     <string name="navigation">Navigation</string>
