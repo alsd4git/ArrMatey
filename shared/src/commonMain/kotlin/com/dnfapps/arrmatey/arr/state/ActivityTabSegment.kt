@@ -13,4 +13,7 @@ enum class ActivityTabSegment(
     Activity(MR.strings.activity),
     History(MR.strings.history),
     Downloaded(MR.strings.recently_downloaded),
+    Blocklist(MR.strings.blocklist),
+    Missing(MR.strings.missing),
+    CutoffUnmet(MR.strings.cutoff_unmet),
 }

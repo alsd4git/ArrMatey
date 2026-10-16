@@ -18,6 +18,7 @@ import com.dnfapps.arrmatey.arr.api.model.AudiobookFile
 import com.dnfapps.arrmatey.arr.api.model.AudiobookMetadataBody
 import com.dnfapps.arrmatey.arr.api.model.AudiobookMetadataResponse
 import com.dnfapps.arrmatey.arr.api.model.AudiobookPreviewPaths
+import com.dnfapps.arrmatey.arr.api.model.BlocklistItem
 import com.dnfapps.arrmatey.arr.api.model.Book
 import com.dnfapps.arrmatey.arr.api.model.BookEdition
 import com.dnfapps.arrmatey.arr.api.model.BookFile
@@ -27,6 +28,7 @@ import com.dnfapps.arrmatey.arr.api.model.CustomFilter
 import com.dnfapps.arrmatey.arr.api.model.DownloadReleasePayload
 import com.dnfapps.arrmatey.arr.api.model.Episode
 import com.dnfapps.arrmatey.arr.api.model.ExtraFile
+import com.dnfapps.arrmatey.arr.api.model.FilesystemItem
 import com.dnfapps.arrmatey.arr.api.model.HistoryItem
 import com.dnfapps.arrmatey.arr.api.model.LidarrTrack
 import com.dnfapps.arrmatey.arr.api.model.LidarrTrackFile
@@ -39,6 +41,7 @@ import com.dnfapps.arrmatey.arr.api.model.ReleaseParams
 import com.dnfapps.arrmatey.arr.api.model.RootFolder
 import com.dnfapps.arrmatey.arr.api.model.SearchAudiobook
 import com.dnfapps.arrmatey.arr.api.model.Tag
+import com.dnfapps.arrmatey.arr.api.model.WantedMediaItem
 import com.dnfapps.arrmatey.arr.state.DownloadState
 import com.dnfapps.arrmatey.instances.model.Instance
 import com.dnfapps.arrmatey.instances.model.InstanceType
@@ -67,6 +70,15 @@ open class ArrInstanceRepository(
     val releases: StateFlow<NetworkResult<List<ArrRelease>>?> = libraryRepository.releases
     val historyCache: StateFlow<Map<Long, List<HistoryItem>>> = libraryRepository.historyCache
     val history: StateFlow<List<HistoryItem>> = libraryRepository.history
+    val blocklist: StateFlow<List<BlocklistItem>> = libraryRepository.blocklist
+    val isBlocklistLoading: StateFlow<Boolean> = libraryRepository.isBlocklistLoading
+    val hasBlocklistLoaded: StateFlow<Boolean> = libraryRepository.hasBlocklistLoaded
+    val missing: StateFlow<List<WantedMediaItem>> = libraryRepository.missing
+    val isMissingLoading: StateFlow<Boolean> = libraryRepository.isMissingLoading
+    val hasMissingLoaded: StateFlow<Boolean> = libraryRepository.hasMissingLoaded
+    val cutoffUnmet: StateFlow<List<WantedMediaItem>> = libraryRepository.cutoffUnmet
+    val isCutoffLoading: StateFlow<Boolean> = libraryRepository.isCutoffLoading
+    val hasCutoffLoaded: StateFlow<Boolean> = libraryRepository.hasCutoffLoaded
     val mediaDetailsCache: StateFlow<Map<Long, ArrMedia>> = libraryRepository.mediaDetailsCache
     val activityTasks: StateFlow<List<QueueItem>> = libraryRepository.activityTasks
     val addItemStatus: StateFlow<OperationStatus> = libraryRepository.addItemStatus
@@ -263,6 +275,25 @@ open class ArrInstanceRepository(
         page: Int = 1,
         pageSize: Int = 100,
     ): NetworkResult<List<HistoryItem>> = libraryRepository.refreshHistory(page, pageSize)
+
+    open suspend fun refreshBlocklist(
+        page: Int = 1,
+        pageSize: Int = 100,
+    ): NetworkResult<List<BlocklistItem>> = libraryRepository.refreshBlocklist(page, pageSize)
+
+    open suspend fun refreshMissing(
+        page: Int = 1,
+        pageSize: Int = 100,
+    ): NetworkResult<List<WantedMediaItem>> = libraryRepository.refreshMissing(instance, page, pageSize)
+
+    open suspend fun refreshCutoff(
+        page: Int = 1,
+        pageSize: Int = 100,
+    ): NetworkResult<List<WantedMediaItem>> = libraryRepository.refreshCutoff(instance, page, pageSize)
+
+    open suspend fun getFilesystem(path: String?): NetworkResult<List<FilesystemItem>> = libraryRepository.getFilesystem(path)
+
+    open suspend fun deleteBlocklistItem(id: Long): NetworkResult<Unit> = libraryRepository.deleteBlocklistItem(id)
 
     open suspend fun editMediaItem(
         item: ArrMedia,

@@ -16,6 +16,9 @@ struct ActivityFilterMenu: View {
     @Binding var historyInstanceId: Int64?
     @Binding var historyStateFilter: HistoryStateFilter
     @Binding var downloadedInstanceId: Int64?
+    @Binding var blocklistInstanceId: Int64?
+    @Binding var missingInstanceId: Int64?
+    @Binding var cutoffInstanceId: Int64?
     let instances: [Instance]
     var onOpenViewCustomization: (() -> Void)? = nil
 
@@ -31,6 +34,21 @@ struct ActivityFilterMenu: View {
 
     private var downloadedInstancePickerTitle: String {
         guard let id = downloadedInstanceId else { return MR.strings().instances.localized() }
+        return instances.first(where: { $0.id == id })?.label ?? MR.strings().all.localized()
+    }
+
+    private var blocklistInstancePickerTitle: String {
+        guard let id = blocklistInstanceId else { return MR.strings().instances.localized() }
+        return instances.first(where: { $0.id == id })?.label ?? MR.strings().all.localized()
+    }
+
+    private var missingInstancePickerTitle: String {
+        guard let id = missingInstanceId else { return MR.strings().instances.localized() }
+        return instances.first(where: { $0.id == id })?.label ?? MR.strings().all.localized()
+    }
+
+    private var cutoffInstancePickerTitle: String {
+        guard let id = cutoffInstanceId else { return MR.strings().instances.localized() }
         return instances.first(where: { $0.id == id })?.label ?? MR.strings().all.localized()
     }
 
@@ -113,6 +131,42 @@ struct ActivityFilterMenu: View {
                     .pickerStyle(.inline)
                 } label: {
                     Label(downloadedInstancePickerTitle, systemImage: "externaldrive.connected.to.line.below.fill")
+                }
+            case .blocklist:
+                Menu {
+                    Picker(blocklistInstancePickerTitle, selection: $blocklistInstanceId) {
+                        Text(MR.strings().all.localized()).tag(nil as Int64?)
+                        ForEach(instances, id: \.id) { instance in
+                            Text(instance.label).tag(instance.id as Int64?)
+                        }
+                    }
+                    .pickerStyle(.inline)
+                } label: {
+                    Label(blocklistInstancePickerTitle, systemImage: "externaldrive.connected.to.line.below.fill")
+                }
+            case .missing:
+                Menu {
+                    Picker(missingInstancePickerTitle, selection: $missingInstanceId) {
+                        Text(MR.strings().all.localized()).tag(nil as Int64?)
+                        ForEach(instances, id: \.id) { instance in
+                            Text(instance.label).tag(instance.id as Int64?)
+                        }
+                    }
+                    .pickerStyle(.inline)
+                } label: {
+                    Label(missingInstancePickerTitle, systemImage: "externaldrive.connected.to.line.below.fill")
+                }
+            case .cutoffUnmet:
+                Menu {
+                    Picker(cutoffInstancePickerTitle, selection: $cutoffInstanceId) {
+                        Text(MR.strings().all.localized()).tag(nil as Int64?)
+                        ForEach(instances, id: \.id) { instance in
+                            Text(instance.label).tag(instance.id as Int64?)
+                        }
+                    }
+                    .pickerStyle(.inline)
+                } label: {
+                    Label(cutoffInstancePickerTitle, systemImage: "externaldrive.connected.to.line.below.fill")
                 }
             default:
                 EmptyView()

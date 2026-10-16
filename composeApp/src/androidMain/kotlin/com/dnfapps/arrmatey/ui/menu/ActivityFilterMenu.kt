@@ -68,6 +68,12 @@ fun ActivityFilterMenu(
     onHistoryStateFilterChanged: (HistoryStateFilter) -> Unit,
     selectedDownloadedInstanceId: Long? = null,
     onDownloadedInstanceChange: (Long?) -> Unit = {},
+    selectedBlocklistInstanceId: Long? = null,
+    onBlocklistInstanceChange: (Long?) -> Unit = {},
+    selectedMissingInstanceId: Long? = null,
+    onMissingInstanceChange: (Long?) -> Unit = {},
+    selectedCutoffInstanceId: Long? = null,
+    onCutoffInstanceChange: (Long?) -> Unit = {},
     onOpenViewCustomization: (() -> Unit)? = null,
 ) {
     var showSheet by remember { mutableStateOf(false) }
@@ -82,6 +88,9 @@ fun ActivityFilterMenu(
                 count
             }
             ActivityTabSegment.Downloaded -> if (selectedDownloadedInstanceId != null) 1 else 0
+            ActivityTabSegment.Blocklist -> if (selectedBlocklistInstanceId != null) 1 else 0
+            ActivityTabSegment.Missing -> if (selectedMissingInstanceId != null) 1 else 0
+            ActivityTabSegment.CutoffUnmet -> if (selectedCutoffInstanceId != null) 1 else 0
         }
     val isFiltered = filterCount > 0
 
@@ -161,6 +170,9 @@ fun ActivityFilterMenu(
                                                 onHistoryStateFilterChanged(HistoryStateFilter.All)
                                             }
                                             ActivityTabSegment.Downloaded -> onDownloadedInstanceChange(null)
+                                            ActivityTabSegment.Blocklist -> onBlocklistInstanceChange(null)
+                                            ActivityTabSegment.Missing -> onMissingInstanceChange(null)
+                                            ActivityTabSegment.CutoffUnmet -> onCutoffInstanceChange(null)
                                         }
                                     },
                                 ) {
@@ -416,6 +428,174 @@ fun ActivityFilterMenu(
                                             FilterChip(
                                                 selected = isSelected,
                                                 onClick = { onDownloadedInstanceChange(instance.id) },
+                                                label = { Text(instance.label) },
+                                                leadingIcon = {
+                                                    if (isSelected) {
+                                                        Icon(
+                                                            Icons.Default.Check,
+                                                            null,
+                                                            Modifier.size(16.dp),
+                                                        )
+                                                    } else {
+                                                        Icon(
+                                                            painter = painterResource(instance.type.tabIcon),
+                                                            contentDescription = null,
+                                                            modifier = Modifier.size(16.dp),
+                                                            tint = instance.type.associatedColor,
+                                                        )
+                                                    }
+                                                },
+                                                shape = MaterialTheme.shapes.small,
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        ActivityTabSegment.Blocklist -> {
+                            if (instances.size > 1) {
+                                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Text(
+                                        text = mokoString(MR.strings.instances),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                    )
+                                    FlowRow(
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        verticalArrangement = Arrangement.spacedBy(0.dp),
+                                    ) {
+                                        val isAllSelected = selectedBlocklistInstanceId == null
+                                        FilterChip(
+                                            selected = isAllSelected,
+                                            onClick = { onBlocklistInstanceChange(null) },
+                                            label = { Text(mokoString(MR.strings.all)) },
+                                            leadingIcon =
+                                            if (isAllSelected) {
+                                                { Icon(Icons.Default.Check, null, Modifier.size(16.dp)) }
+                                            } else {
+                                                null
+                                            },
+                                            shape = MaterialTheme.shapes.small,
+                                        )
+                                        instances.forEach { instance ->
+                                            val isSelected = selectedBlocklistInstanceId == instance.id
+                                            FilterChip(
+                                                selected = isSelected,
+                                                onClick = { onBlocklistInstanceChange(instance.id) },
+                                                label = { Text(instance.label) },
+                                                leadingIcon = {
+                                                    if (isSelected) {
+                                                        Icon(
+                                                            Icons.Default.Check,
+                                                            null,
+                                                            Modifier.size(16.dp),
+                                                        )
+                                                    } else {
+                                                        Icon(
+                                                            painter = painterResource(instance.type.tabIcon),
+                                                            contentDescription = null,
+                                                            modifier = Modifier.size(16.dp),
+                                                            tint = instance.type.associatedColor,
+                                                        )
+                                                    }
+                                                },
+                                                shape = MaterialTheme.shapes.small,
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        ActivityTabSegment.Missing -> {
+                            if (instances.size > 1) {
+                                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Text(
+                                        text = mokoString(MR.strings.instances),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                    )
+                                    FlowRow(
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        verticalArrangement = Arrangement.spacedBy(0.dp),
+                                    ) {
+                                        val isAllSelected = selectedMissingInstanceId == null
+                                        FilterChip(
+                                            selected = isAllSelected,
+                                            onClick = { onMissingInstanceChange(null) },
+                                            label = { Text(mokoString(MR.strings.all)) },
+                                            leadingIcon =
+                                            if (isAllSelected) {
+                                                { Icon(Icons.Default.Check, null, Modifier.size(16.dp)) }
+                                            } else {
+                                                null
+                                            },
+                                            shape = MaterialTheme.shapes.small,
+                                        )
+                                        instances.forEach { instance ->
+                                            val isSelected = selectedMissingInstanceId == instance.id
+                                            FilterChip(
+                                                selected = isSelected,
+                                                onClick = { onMissingInstanceChange(instance.id) },
+                                                label = { Text(instance.label) },
+                                                leadingIcon = {
+                                                    if (isSelected) {
+                                                        Icon(
+                                                            Icons.Default.Check,
+                                                            null,
+                                                            Modifier.size(16.dp),
+                                                        )
+                                                    } else {
+                                                        Icon(
+                                                            painter = painterResource(instance.type.tabIcon),
+                                                            contentDescription = null,
+                                                            modifier = Modifier.size(16.dp),
+                                                            tint = instance.type.associatedColor,
+                                                        )
+                                                    }
+                                                },
+                                                shape = MaterialTheme.shapes.small,
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        ActivityTabSegment.CutoffUnmet -> {
+                            if (instances.size > 1) {
+                                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Text(
+                                        text = mokoString(MR.strings.instances),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                    )
+                                    FlowRow(
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        verticalArrangement = Arrangement.spacedBy(0.dp),
+                                    ) {
+                                        val isAllSelected = selectedCutoffInstanceId == null
+                                        FilterChip(
+                                            selected = isAllSelected,
+                                            onClick = { onCutoffInstanceChange(null) },
+                                            label = { Text(mokoString(MR.strings.all)) },
+                                            leadingIcon =
+                                            if (isAllSelected) {
+                                                { Icon(Icons.Default.Check, null, Modifier.size(16.dp)) }
+                                            } else {
+                                                null
+                                            },
+                                            shape = MaterialTheme.shapes.small,
+                                        )
+                                        instances.forEach { instance ->
+                                            val isSelected = selectedCutoffInstanceId == instance.id
+                                            FilterChip(
+                                                selected = isSelected,
+                                                onClick = { onCutoffInstanceChange(instance.id) },
                                                 label = { Text(instance.label) },
                                                 leadingIcon = {
                                                     if (isSelected) {
