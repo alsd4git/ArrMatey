@@ -1,6 +1,8 @@
 package com.dnfapps.arrmatey.backup.usecase
 
 import com.dnfapps.arrmatey.backup.TransportEncryptor
+import com.dnfapps.arrmatey.backup.model.BackupExport
+import com.dnfapps.arrmatey.backup.model.CustomWebpageExport
 import com.dnfapps.arrmatey.backup.viewmodel.BackupViewModel
 import com.dnfapps.arrmatey.webpage.model.CustomWebpage
 import kotlinx.coroutines.Dispatchers
@@ -366,5 +368,56 @@ class ImportDataUseCaseTest {
         } finally {
             Dispatchers.resetMain()
         }
+    }
+    @Test
+    fun customWebpageRestoreReusesExistingPages() = runTest {
+        val webpages = mutableListOf<CustomWebpage>()
+        var nextId = 20L
+        val testWebpageDao = object : com.dnfapps.arrmatey.database.dao.CustomWebpageDao by dummyCustomWebpageDao {
+            override suspend fun getAllWebpagesList(): List<CustomWebpage> = webpages.toList()
+
+            override suspend fun insert(webpage: CustomWebpage): Long {
+                val id = nextId++
+                webpages += webpage.copy(id = id)
+                return id
+            }
+
+            override suspend fun update(webpage: CustomWebpage): Int {
+                val index = webpages.indexOfFirst { it.id == webpage.id }
+                if (index < 0) return 0
+                webpages[index] = webpage
+                return 1
+            }
+        }
+        val importUseCase = ImportDataUseCase(
+            instanceDao = dummyInstanceDao,
+            downloadClientDao = dummyDownloadClientDao,
+            customWebpageDao = testWebpageDao,
+            instancePreferenceStoreRepository = InstancePreferenceStoreRepository(dataStoreFactory),
+            preferencesStore = PreferencesStore(dataStoreFactory),
+            transportEncryptor = fakeEncryptor,
+            json = json,
+        )
+        val backup = BackupExport(
+            customWebpages = listOf(
+                CustomWebpageExport(name = "Audit", url = "https://example.com"),
+                CustomWebpageExport(name = "Second", url = "https://example.net"),
+            ),
+        )
+
+        repeat(2) {
+            importUseCase.importSelected(
+                backup = backup,
+                selectedInstanceIndices = emptySet(),
+                selectedDownloadClientIndices = emptySet(),
+                selectedCustomWebpageIndices = setOf(0, 1),
+                importTabPreferences = false,
+                importUiPreferences = false,
+                importIntegrationsPreferences = false,
+            )
+        }
+
+        assertEquals(2, webpages.size)
+        assertEquals(20L, webpages.first().id)
     }
 }

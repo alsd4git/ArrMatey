@@ -147,15 +147,24 @@ class ImportDataUseCase(
 
         downloadClientDao.ensureFirstSelectedIfNone()
 
+        val existingWebpages = customWebpageDao.getAllWebpagesList().toMutableList()
         backup.customWebpages.forEachIndexed { index, export ->
             if (index in selectedCustomWebpageIndices) {
+                val existing = existingWebpages.firstOrNull { it.name == export.name && it.url == export.url }
                 val webpage =
                     CustomWebpage(
+                        id = existing?.id ?: 0L,
                         name = export.name,
                         url = export.url,
                         headers = export.headers,
                     )
-                customWebpageDao.insert(webpage)
+                val importedId = if (existing == null) {
+                    customWebpageDao.insert(webpage)
+                } else {
+                    customWebpageDao.update(webpage)
+                    existing.id
+                }
+                if (existing == null) existingWebpages += webpage.copy(id = importedId)
             }
         }
 
