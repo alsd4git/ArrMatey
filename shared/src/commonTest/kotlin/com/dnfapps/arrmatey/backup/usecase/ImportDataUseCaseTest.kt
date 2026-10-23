@@ -1,6 +1,14 @@
 package com.dnfapps.arrmatey.backup.usecase
 
 import com.dnfapps.arrmatey.backup.TransportEncryptor
+import com.dnfapps.arrmatey.backup.viewmodel.BackupViewModel
+import com.dnfapps.arrmatey.webpage.model.CustomWebpage
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.setMain
 import com.dnfapps.arrmatey.database.dao.InstanceDao
 import com.dnfapps.arrmatey.datastore.DataStoreFactory
 import com.dnfapps.arrmatey.datastore.InstancePreferenceStoreRepository
@@ -309,5 +317,54 @@ class ImportDataUseCaseTest {
         assertEquals(1, insertedClients.size)
         assertEquals(true, insertedClients.first().selected)
         assertEquals(true, ensureFirstSelectedDownloadClientCalled)
+    }
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun importSessionClearsPreviousBackupAndRefreshesExportedPages() = runTest {
+        Dispatchers.setMain(StandardTestDispatcher(testScheduler))
+        try {
+            val pages = mutableListOf<CustomWebpage>()
+            val pageDao = object : com.dnfapps.arrmatey.database.dao.CustomWebpageDao by dummyCustomWebpageDao {
+                override suspend fun getAllWebpagesList(): List<CustomWebpage> = pages.toList()
+                override suspend fun insert(webpage: CustomWebpage): Long {
+                    val id = pages.size.toLong() + 1
+                    pages += webpage.copy(id = id)
+                    return id
+                }
+            }
+            val instancePreferences = InstancePreferenceStoreRepository(dataStoreFactory)
+            val preferences = PreferencesStore(dataStoreFactory)
+            val importer = ImportDataUseCase(dummyInstanceDao, dummyDownloadClientDao, pageDao, instancePreferences, preferences, fakeEncryptor, json)
+            val exporter = ExportDataUseCase(dummyInstanceDao, dummyDownloadClientDao, pageDao, instancePreferences, preferences, fakeEncryptor, json)
+            val viewModel = BackupViewModel(exporter, importer, dummyInstanceDao, dummyDownloadClientDao, pageDao)
+            advanceUntilIdle()
+            val backup = """{"customWebpages":[{"name":"Audit","url":"https://example.com"}]}"""
+            viewModel.setImportPassword("test")
+            viewModel.prepareImport(backup)
+            advanceUntilIdle()
+            assertEquals(1, viewModel.importUiState.value.decryptedBackup?.customWebpages?.size)
+            viewModel.resetImportState()
+            assertEquals(null, viewModel.importUiState.value.decryptedBackup)
+            assertEquals("", viewModel.importUiState.value.password)
+            viewModel.setImportPassword("test")
+            viewModel.prepareImport(backup)
+            advanceUntilIdle()
+            viewModel.prepareImport("invalid JSON")
+            advanceUntilIdle()
+            assertEquals(null, viewModel.importUiState.value.decryptedBackup)
+            assertEquals(emptySet(), viewModel.importUiState.value.selectedCustomWebpageIndices)
+            assertNotNull(viewModel.importUiState.value.error)
+            viewModel.prepareImport(backup)
+            advanceUntilIdle()
+            var complete = false
+            viewModel.executeImport { complete = true }
+            advanceUntilIdle()
+            assertEquals(true, complete)
+            assertEquals(null, viewModel.importUiState.value.decryptedBackup)
+            assertEquals(1, viewModel.exportUiState.value.customWebpages.size)
+            assertEquals(setOf(1L), viewModel.exportUiState.value.selectedCustomWebpageIds)
+        } finally {
+            Dispatchers.resetMain()
+        }
     }
 }
