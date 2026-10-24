@@ -4,6 +4,7 @@ import com.dnfapps.arrmatey.backup.TransportEncryptor
 import com.dnfapps.arrmatey.backup.model.BackupExport
 import com.dnfapps.arrmatey.backup.model.CustomWebpageExport
 import com.dnfapps.arrmatey.backup.viewmodel.BackupViewModel
+import com.dnfapps.arrmatey.database.dao.CustomWebpageDao
 import com.dnfapps.arrmatey.database.dao.InstanceDao
 import com.dnfapps.arrmatey.datastore.DataStoreFactory
 import com.dnfapps.arrmatey.datastore.InstancePreferenceStoreRepository
@@ -140,20 +141,20 @@ class ImportDataUseCaseTest {
         }
 
     private val dummyCustomWebpageDao =
-        object : com.dnfapps.arrmatey.database.dao.CustomWebpageDao {
-            override fun getAllWebpages(): Flow<List<com.dnfapps.arrmatey.webpage.model.CustomWebpage>> = emptyFlow()
+        object : CustomWebpageDao {
+            override fun getAllWebpages(): Flow<List<CustomWebpage>> = emptyFlow()
 
-            override suspend fun getAllWebpagesList(): List<com.dnfapps.arrmatey.webpage.model.CustomWebpage> = emptyList()
+            override suspend fun getAllWebpagesList(): List<CustomWebpage> = emptyList()
 
-            override suspend fun getWebpageById(id: Long): com.dnfapps.arrmatey.webpage.model.CustomWebpage? = null
+            override suspend fun getWebpageById(id: Long): CustomWebpage? = null
 
-            override fun observeWebpageById(id: Long): Flow<com.dnfapps.arrmatey.webpage.model.CustomWebpage?> = emptyFlow()
+            override fun observeWebpageById(id: Long): Flow<CustomWebpage?> = emptyFlow()
 
-            override suspend fun insert(webpage: com.dnfapps.arrmatey.webpage.model.CustomWebpage): Long = 0
+            override suspend fun insert(webpage: CustomWebpage): Long = 0
 
-            override suspend fun update(webpage: com.dnfapps.arrmatey.webpage.model.CustomWebpage): Int = 0
+            override suspend fun update(webpage: CustomWebpage): Int = 0
 
-            override suspend fun delete(webpage: com.dnfapps.arrmatey.webpage.model.CustomWebpage) {}
+            override suspend fun delete(webpage: CustomWebpage) {}
 
             override suspend fun deleteById(id: Long) {}
         }
@@ -326,7 +327,7 @@ class ImportDataUseCaseTest {
     fun customWebpageRestoreReusesExistingPages() = runTest {
         val webpages = mutableListOf<CustomWebpage>()
         var nextId = 20L
-        val testWebpageDao = object : com.dnfapps.arrmatey.database.dao.CustomWebpageDao by dummyCustomWebpageDao {
+        val testWebpageDao = object : CustomWebpageDao by dummyCustomWebpageDao {
             override suspend fun getAllWebpagesList(): List<CustomWebpage> = webpages.toList()
 
             override suspend fun insert(webpage: CustomWebpage): Long {
@@ -403,7 +404,7 @@ class ImportDataUseCaseTest {
 
     @Test
     fun exportIncludesCustomWebpageIdAndSelfSignedSetting() = runTest {
-        val webpageDao = object : com.dnfapps.arrmatey.database.dao.CustomWebpageDao by dummyCustomWebpageDao {
+        val webpageDao = object : CustomWebpageDao by dummyCustomWebpageDao {
             override suspend fun getAllWebpagesList(): List<CustomWebpage> = listOf(
                 CustomWebpage(id = 42, name = "TLS page", url = "https://example.com", allowSelfSignedCerts = true),
             )
@@ -439,7 +440,7 @@ class ImportDataUseCaseTest {
         Dispatchers.setMain(StandardTestDispatcher(testScheduler))
         try {
             val pages = mutableListOf<CustomWebpage>()
-            val pageDao = object : com.dnfapps.arrmatey.database.dao.CustomWebpageDao by dummyCustomWebpageDao {
+            val pageDao = object : CustomWebpageDao by dummyCustomWebpageDao {
                 override suspend fun getAllWebpagesList(): List<CustomWebpage> = pages.toList()
                 override suspend fun insert(webpage: CustomWebpage): Long {
                     val id = pages.size.toLong() + 1
